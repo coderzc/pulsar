@@ -353,15 +353,21 @@ public class DirectProxyHandler {
                 ProxyService.OPS_COUNTER.inc();
                 if (msg instanceof ByteBuf) {
                     ProxyService.BYTES_COUNTER.inc(((ByteBuf) msg).readableBytes());
+                } else {
+                    log.warn("msg is :" + msg.getClass().getName());
                 }
                 inboundChannel.writeAndFlush(msg)
                         .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
-                if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
-                    if (!this.isTlsInboundChannel && !ProxyConnection.isTlsChannel(ctx.channel())) {
-                        DirectProxyHandler.this.proxyConnection.spliceNIC2NIC((EpollSocketChannel) ctx.channel(),
-                                (EpollSocketChannel) inboundChannel);
+                if (ctx.channel().pipeline().get("frameDecoder") != null) {
+                    if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
+                        if (!this.isTlsInboundChannel && !ProxyConnection.isTlsChannel(ctx.channel())) {
+                            DirectProxyHandler.this.proxyConnection.spliceNIC2NIC((EpollSocketChannel) ctx.channel(),
+                                    (EpollSocketChannel) inboundChannel);
+                        }
                     }
+                } else {
+                    log.warn("have frameDecoder!!! :" + msg.getClass().getName());
                 }
 
                 break;

@@ -233,10 +233,10 @@ public class ProxyService implements Closeable {
         bootstrap.channel(serverSocketChannelClass);
         EventLoopUtil.enableTriggeredMode(bootstrap);
 
-//        if (proxyConfig.isProxyZeroCopyModeEnabled()
-//                && EpollServerSocketChannel.class.isAssignableFrom(serverSocketChannelClass)) {
-//            proxyZeroCopyModeEnabled = true;
-//        }
+        if (proxyConfig.isProxyZeroCopyModeEnabled()
+                && EpollServerSocketChannel.class.isAssignableFrom(serverSocketChannelClass)) {
+            proxyZeroCopyModeEnabled = true;
+        }
 
         bootstrap.childHandler(new ServiceChannelInitializer(this, proxyConfig, false));
         // Bind and start to accept incoming connections.
