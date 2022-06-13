@@ -283,11 +283,14 @@ public class ProxyConnection extends PulsarHandler {
      */
     protected void spliceNIC2NIC(EpollSocketChannel inboundChannel, EpollSocketChannel outboundChannel) {
         ChannelPromise promise = ctx.newPromise();
+        LOG.info("start splice data....");
         inboundChannel.spliceTo(outboundChannel, SPLICE_BYTES, promise);
         promise.addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
+                LOG.info("successful splice data");
                 future.channel().pipeline().fireExceptionCaught(future.cause());
             } else {
+                LOG.warn("failed splice data");
                 ProxyService.OPS_COUNTER.inc();
                 directProxyHandler.getInboundChannelRequestsRate().recordEvent(SPLICE_BYTES);
                 ProxyService.BYTES_COUNTER.inc(SPLICE_BYTES);
