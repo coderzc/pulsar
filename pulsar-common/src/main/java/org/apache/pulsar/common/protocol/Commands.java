@@ -70,6 +70,8 @@ import org.apache.pulsar.common.api.proto.CommandGetSchemaResponse;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespace;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespace.Mode;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespaceResponse;
+import org.apache.pulsar.common.api.proto.CommandHealthCheck;
+import org.apache.pulsar.common.api.proto.CommandHealthCheckResponse;
 import org.apache.pulsar.common.api.proto.CommandLookupTopic;
 import org.apache.pulsar.common.api.proto.CommandLookupTopicResponse;
 import org.apache.pulsar.common.api.proto.CommandLookupTopicResponse.LookupType;
@@ -1470,6 +1472,27 @@ public class Commands {
                 .setError(error);
         if (errorMsg != null) {
             response.setMessage(errorMsg);
+        }
+        return serializeWithSize(cmd);
+    }
+    public static ByteBuf newHealthCheckRequest(long requestId) {
+        BaseCommand cmd = localCmd(Type.HEALTH_CHECK);
+        CommandHealthCheck healthCheck = cmd.setHealthCheck();
+        healthCheck.setRequestId(requestId);
+        return serializeWithSize(cmd);
+    }
+
+    public static ByteBuf newHealthCheckResponse(long requestId, boolean ok,
+                                                 ServerError errorCode, String errorMsg) {
+        BaseCommand cmd = localCmd(Type.HEALTH_CHECK_RESPONSE);
+        CommandHealthCheckResponse response = cmd.setHealthCheckResponse()
+                .setRequestId(requestId)
+                .setOk(ok);
+        if (errorCode != null) {
+            response.setErrorCode(errorCode);
+        }
+        if (errorMsg != null) {
+            response.setErrorMessage(errorMsg);
         }
         return serializeWithSize(cmd);
     }

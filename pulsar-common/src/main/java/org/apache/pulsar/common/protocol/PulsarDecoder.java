@@ -55,6 +55,8 @@ import org.apache.pulsar.common.api.proto.CommandGetSchema;
 import org.apache.pulsar.common.api.proto.CommandGetSchemaResponse;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespace;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespaceResponse;
+import org.apache.pulsar.common.api.proto.CommandHealthCheck;
+import org.apache.pulsar.common.api.proto.CommandHealthCheckResponse;
 import org.apache.pulsar.common.api.proto.CommandLookupTopic;
 import org.apache.pulsar.common.api.proto.CommandLookupTopicResponse;
 import org.apache.pulsar.common.api.proto.CommandMessage;
@@ -432,6 +434,16 @@ public abstract class PulsarDecoder extends ChannelInboundHandlerAdapter {
                 checkArgument(cmd.hasEndTxnOnSubscriptionResponse());
                 handleEndTxnOnSubscriptionResponse(cmd.getEndTxnOnSubscriptionResponse());
                 break;
+
+            case HEALTH_CHECK:
+                checkArgument(cmd.hasHealthCheck());
+                handleHealthCheck(cmd.getHealthCheck());
+                break;
+
+            case HEALTH_CHECK_RESPONSE:
+                checkArgument(cmd.hasHealthCheckResponse());
+                handleHealthCheckResponse(cmd.getHealthCheckResponse());
+                break;
             default:
                 break;
             }
@@ -669,6 +681,14 @@ public abstract class PulsarDecoder extends ChannelInboundHandlerAdapter {
 
     protected void handleEndTxnOnSubscriptionResponse(
         CommandEndTxnOnSubscriptionResponse commandEndTxnOnSubscriptionResponse) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void handleHealthCheck(CommandHealthCheck commandHealthCheck) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void handleHealthCheckResponse(CommandHealthCheckResponse commandHealthCheckResponse) {
         throw new UnsupportedOperationException();
     }
 

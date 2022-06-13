@@ -330,7 +330,6 @@ public class BinaryProtoLookupService implements LookupService {
         });
     }
 
-
     @Override
     public void close() throws Exception {
         // no-op

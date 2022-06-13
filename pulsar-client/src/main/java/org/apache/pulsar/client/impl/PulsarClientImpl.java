@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timer;
@@ -54,6 +55,7 @@ import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.AuthenticationFactory;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.ConsumerBuilder;
+import org.apache.pulsar.client.api.HealthCheckResult;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -82,6 +84,7 @@ import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.TopicDomain;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.partition.PartitionedTopicMetadata;
+import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.schema.SchemaInfo;
 import org.apache.pulsar.common.topics.TopicList;
 import org.apache.pulsar.common.util.FutureUtil;
@@ -110,6 +113,8 @@ public class PulsarClientImpl implements PulsarClient {
     private final ExecutorProvider internalExecutorProvider;
     private final boolean createdEventLoopGroup;
     private final boolean createdCnxPool;
+
+    private final ServiceNameResolver serviceNameResolver;
 
     public enum State {
         Open, Closing, Closed
@@ -219,6 +224,8 @@ public class PulsarClientImpl implements PulsarClient {
             memoryLimitController = new MemoryLimitController(conf.getMemoryLimitBytes(),
                     (long) (conf.getMemoryLimitBytes() * THRESHOLD_FOR_CONSUMER_RECEIVER_QUEUE_SIZE_SHRINKING),
                     this::reduceConsumerReceiverQueueSize);
+            this.serviceNameResolver = new PulsarServiceNameResolver();
+            this.serviceNameResolver.updateServiceUrl(conf.getServiceUrl());
             state.set(State.Open);
         } catch (Throwable t) {
             shutdown();
@@ -901,6 +908,7 @@ public class PulsarClientImpl implements PulsarClient {
 
         conf.setServiceUrl(serviceUrl);
         lookup.updateServiceUrl(serviceUrl);
+        serviceNameResolver.updateServiceUrl(serviceUrl);
         cnxPool.closeAllConnections();
     }
 
@@ -1155,5 +1163,27 @@ public class PulsarClientImpl implements PulsarClient {
             throw new PulsarClientException.InvalidConfigurationException("Transactions are not enabled");
         }
         return new TransactionBuilderImpl(this, tcClient);
+    }
+
+    @Override
+    public CompletableFuture<HealthCheckResult> healthCheck() {
+        CompletableFuture<HealthCheckResult> healthCheckFuture = new CompletableFuture<>();
+        this.getCnxPool().getConnection(serviceNameResolver.resolveHost()).thenAccept(clientCnx -> {
+            long requestId = this.newRequestId();
+            ByteBuf byteBuf = Commands.newHealthCheckRequest(requestId);
+
+            clientCnx.newHealthCheck(byteBuf, requestId).whenComplete((r, t) -> {
+                if (t != null) {
+                    healthCheckFuture.completeExceptionally(t);
+                } else {
+                    healthCheckFuture.complete(r);
+                }
+            });
+        }).exceptionally((e) -> {
+            healthCheckFuture.completeExceptionally(e);
+            return null;
+        });
+
+        return healthCheckFuture;
     }
 }

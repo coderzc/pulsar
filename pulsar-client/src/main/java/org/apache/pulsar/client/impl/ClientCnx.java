@@ -52,6 +52,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.AuthenticationDataProvider;
+import org.apache.pulsar.client.api.HealthCheckResult;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.PulsarClientException.ConnectException;
 import org.apache.pulsar.client.api.PulsarClientException.TimeoutException;
@@ -77,6 +78,7 @@ import org.apache.pulsar.common.api.proto.CommandGetLastMessageIdResponse;
 import org.apache.pulsar.common.api.proto.CommandGetOrCreateSchemaResponse;
 import org.apache.pulsar.common.api.proto.CommandGetSchemaResponse;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespaceResponse;
+import org.apache.pulsar.common.api.proto.CommandHealthCheckResponse;
 import org.apache.pulsar.common.api.proto.CommandLookupTopicResponse;
 import org.apache.pulsar.common.api.proto.CommandMessage;
 import org.apache.pulsar.common.api.proto.CommandNewTxnResponse;
@@ -193,7 +195,8 @@ public class ClientCnx extends PulsarHandler {
         GetSchema,
         GetOrCreateSchema,
         AckResponse,
-        Lookup;
+        Lookup,
+        HealthCheck;
 
         String getDescription() {
             if (this == Command) {
@@ -802,6 +805,10 @@ public class ClientCnx extends PulsarHandler {
         return sendRequestAndHandleTimeout(request, requestId, RequestType.AckResponse, true);
     }
 
+    public CompletableFuture<HealthCheckResult> newHealthCheck(ByteBuf request, long requestId) {
+        return sendRequestAndHandleTimeout(request, requestId, RequestType.HealthCheck, true);
+    }
+
     public void newAckForReceiptWithFuture(ByteBuf request, long requestId,
                                            TimedCompletableFuture<Void> future) {
         sendRequestAndHandleTimeout(request, requestId, RequestType.AckResponse, false, future);
@@ -1029,6 +1036,29 @@ public class ClientCnx extends PulsarHandler {
         } else {
             log.warn("Tc client connect command has been completed and get response for request: {}",
                     response.getRequestId());
+        }
+    }
+
+    @Override
+    protected void handleHealthCheckResponse(CommandHealthCheckResponse healthCheckResponse) {
+        checkArgument(state == State.Ready);
+
+        long requestId = healthCheckResponse.getRequestId();
+
+        if (log.isDebugEnabled()) {
+            log.debug("{} Received get topics of namespace success response from server: {} - health status: {}",
+                    ctx.channel(), healthCheckResponse.getRequestId(), healthCheckResponse.isOk());
+        }
+
+        CompletableFuture<HealthCheckResult> requestFuture =
+                (CompletableFuture<HealthCheckResult>) pendingRequests.remove(requestId);
+        if (requestFuture != null) {
+            requestFuture.complete(new HealthCheckResult(healthCheckResponse.isOk(),
+                    healthCheckResponse.hasErrorCode() ? healthCheckResponse.getErrorCode().getValue() : 0,
+                    healthCheckResponse.hasErrorMessage() ? healthCheckResponse.getErrorMessage() : null));
+        } else {
+            log.warn("{} Received unknown request id from server: {}", ctx.channel(),
+                    healthCheckResponse.getRequestId());
         }
     }
 

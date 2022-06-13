@@ -784,6 +784,18 @@ message CommandGetOrCreateSchemaResponse {
     optional bytes schema_version   = 4;
 }
 
+message CommandHealthCheck {
+    required uint64 request_id = 1;
+}
+
+message CommandHealthCheckResponse {
+    required uint64 request_id = 1;
+    required bool ok = 2 [default = false];
+
+    optional ServerError error_code = 3;
+    optional string error_message   = 4;
+}
+
 /// --- transaction related ---
 
 enum TxnAction {
@@ -963,6 +975,9 @@ message BaseCommand {
         GET_OR_CREATE_SCHEMA = 39;
         GET_OR_CREATE_SCHEMA_RESPONSE = 40;
 
+        HEALTH_CHECK = 41;
+        HEALTH_CHECK_RESPONSE = 42;
+
         // transaction related
         NEW_TXN = 50;
         NEW_TXN_RESPONSE = 51;
@@ -1044,6 +1059,9 @@ message BaseCommand {
 
     optional CommandGetOrCreateSchema getOrCreateSchema = 39;
     optional CommandGetOrCreateSchemaResponse getOrCreateSchemaResponse = 40;
+
+    optional CommandHealthCheck healthCheck = 41;
+    optional CommandHealthCheckResponse healthCheckResponse = 42;
 
     // transaction related
     optional CommandNewTxn newTxn = 50;

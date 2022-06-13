@@ -2732,6 +2732,17 @@ public class ServiceConfiguration implements PulsarConfiguration {
     )
     private Set<String> additionalServlets = new TreeSet<>();
 
+    @FieldContext(
+            category = CATEGORY_SERVER,
+            doc = "Health check result cache expiry time in seconds"
+    )
+    private int healthCheckCacheInSeconds = 60;
+
+    @FieldContext(
+            category = CATEGORY_SERVER,
+            doc = "Health check wait for lock and internal check timeout in seconds"
+    )
+    private int healthCheckTimeoutInSeconds = 30;
     public String getMetadataStoreUrl() {
         if (StringUtils.isNotBlank(metadataStoreUrl)) {
             return metadataStoreUrl;

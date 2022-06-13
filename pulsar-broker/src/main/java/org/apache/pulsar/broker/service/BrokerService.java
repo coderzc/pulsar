@@ -25,6 +25,8 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.pulsar.common.naming.SystemTopicNames.isTransactionInternalName;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -41,6 +43,9 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -52,8 +57,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -69,9 +76,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -125,7 +134,11 @@ import org.apache.pulsar.broker.validator.BindAddressValidator;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminBuilder;
 import org.apache.pulsar.client.api.ClientBuilder;
+import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Reader;
+import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SizeUnit;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
 import org.apache.pulsar.client.impl.conf.ClientConfigurationData;
@@ -141,6 +154,7 @@ import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.SystemTopicNames;
 import org.apache.pulsar.common.naming.TopicDomain;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.naming.TopicVersion;
 import org.apache.pulsar.common.partition.PartitionedTopicMetadata;
 import org.apache.pulsar.common.policies.data.AutoSubscriptionCreationOverride;
 import org.apache.pulsar.common.policies.data.AutoTopicCreationOverride;
@@ -161,6 +175,7 @@ import org.apache.pulsar.common.util.FieldParser;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.common.util.RateLimiter;
 import org.apache.pulsar.common.util.RestException;
+import org.apache.pulsar.common.util.ThreadDumpUtil;
 import org.apache.pulsar.common.util.collections.ConcurrentOpenHashMap;
 import org.apache.pulsar.common.util.collections.ConcurrentOpenHashSet;
 import org.apache.pulsar.common.util.netty.ChannelFutures;
@@ -279,6 +294,16 @@ public class BrokerService implements Closeable {
     private Set<BrokerEntryMetadataInterceptor> brokerEntryMetadataInterceptors;
     private Set<ManagedLedgerPayloadProcessor> brokerEntryPayloadProcessors;
 
+    public static final String HEALTH_CHECK_TOPIC_SUFFIX = "healthcheck";
+
+    // log a full thread dump when a deadlock is detected in healthcheck once every 10 minutes
+    // to prevent excessive logging
+    private static final long LOG_THREADDUMP_INTERVAL_WHEN_DEADLOCK_DETECTED = 600000L;
+    private volatile long threadDumpLoggedTimestamp;
+
+    private final ReentrantLock healthCheckLock = new ReentrantLock();
+    private final Cache<String, Boolean> healthCheckCache;
+
     public BrokerService(PulsarService pulsar, EventLoopGroup eventLoopGroup) throws Exception {
         this.pulsar = pulsar;
         this.preciseTopicPublishRateLimitingEnable =
@@ -394,6 +419,8 @@ public class BrokerService implements Closeable {
                         .getBrokerEntryPayloadProcessors(), BrokerService.class.getClassLoader());
 
         this.bundlesQuotas = new BundlesQuotas(pulsar.getLocalMetadataStore());
+        this.healthCheckCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(pulsar.getConfig().getHealthCheckCacheInSeconds(), TimeUnit.SECONDS).build();
     }
 
     // This call is used for starting additional protocol handlers
@@ -3005,5 +3032,195 @@ public class BrokerService implements Closeable {
         private final String topic;
         private final CompletableFuture<Optional<Topic>> topicFuture;
         private final Map<String, String> properties;
+    }
+    private void checkDeadlockedThreads() {
+        ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+        long[] threadIds = threadBean.findDeadlockedThreads();
+        if (threadIds != null && threadIds.length > 0) {
+            ThreadInfo[] threadInfos = threadBean.getThreadInfo(threadIds, false, false);
+            String threadNames = Arrays.stream(threadInfos)
+                    .map(threadInfo -> threadInfo.getThreadName() + "(tid=" + threadInfo.getThreadId() + ")").collect(
+                            Collectors.joining(", "));
+            if (System.currentTimeMillis() - threadDumpLoggedTimestamp
+                    > LOG_THREADDUMP_INTERVAL_WHEN_DEADLOCK_DETECTED) {
+                threadDumpLoggedTimestamp = System.currentTimeMillis();
+                log.error("Deadlocked threads detected. {}\n{}", threadNames,
+                        ThreadDumpUtil.buildThreadDiagnosticString());
+            } else {
+                log.error("Deadlocked threads detected. {}", threadNames);
+            }
+            throw new IllegalStateException("Deadlocked threads detected. " + threadNames);
+        }
+    }
+
+    private CompletableFuture<Void> internalRunHealthCheck(TopicVersion topicVersion, String clientId) {
+        NamespaceName namespaceName = (topicVersion == TopicVersion.V2)
+                ? NamespaceService.getHeartbeatNamespaceV2(pulsar().getAdvertisedAddress(), pulsar().getConfiguration())
+                : NamespaceService.getHeartbeatNamespace(pulsar().getAdvertisedAddress(), pulsar().getConfiguration());
+        final String topicName = String.format("persistent://%s/%s", namespaceName, HEALTH_CHECK_TOPIC_SUFFIX);
+        log.info("[{}] Running healthCheck with topic={}", clientId, topicName);
+        final String messageStr = UUID.randomUUID().toString();
+        final String subscriptionName = "healthCheck-" + messageStr;
+        // create non-partitioned topic manually and close the previous reader if present.
+        return this.getTopic(topicName, true)
+                .thenCompose(topicOptional -> {
+                    if (!topicOptional.isPresent()) {
+                        log.error("[{}] Fail to run health check while get topic {}. because get null value.",
+                                clientId, topicName);
+                        throw new RestException(Response.Status.NOT_FOUND,
+                                String.format("Topic [%s] not found after create.", topicName));
+                    }
+                    PulsarClient client;
+                    try {
+                        client = pulsar().getClient();
+                    } catch (PulsarServerException e) {
+                        log.error("[{}] Fail to run health check while get client.", clientId);
+                        throw new RestException(e);
+                    }
+                    CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+                    client.newProducer(Schema.STRING).topic(topicName).createAsync()
+                            .thenCompose(producer -> client.newReader(Schema.STRING).topic(topicName)
+                                    .subscriptionName(subscriptionName)
+                                    .startMessageId(MessageId.latest)
+                                    .createAsync().exceptionally(createException -> {
+                                        producer.closeAsync().exceptionally(ex -> {
+                                            log.error("[{}] Close producer fail while heath check.", clientId);
+                                            return null;
+                                        });
+                                        throw FutureUtil.wrapToCompletionException(createException);
+                                    }).thenCompose(reader -> producer.sendAsync(messageStr)
+                                            .thenCompose(__ -> healthCheckRecursiveReadNext(reader, messageStr))
+                                            .whenComplete((__, ex) -> {
+                                                closeAndReCheck(producer, reader, topicOptional.get(),
+                                                                subscriptionName,
+                                                                clientId)
+                                                                .whenComplete((unused, innerEx) -> {
+                                                                    if (ex != null) {
+                                                                        resultFuture.completeExceptionally(ex);
+                                                                    } else {
+                                                                        resultFuture.complete(null);
+                                                                    }
+                                                                });
+                                                    }
+                                            ))
+                            ).exceptionally(ex -> {
+                                resultFuture.completeExceptionally(ex);
+                                return null;
+                            });
+                    return resultFuture;
+                });
+    }
+
+    public CompletableFuture<Void> internalRunHealthCheckWithCache(TopicVersion topicVersion, String clientId) {
+        CompletableFuture<Void> healthCheckFuture = new CompletableFuture<>();
+
+        Boolean healthy = healthCheckCache.getIfPresent(topicVersion.name());
+        if (Boolean.TRUE.equals(healthy)) {
+            healthCheckFuture.complete(null);
+            return healthCheckFuture;
+        }
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                boolean locked = healthCheckLock.tryLock(pulsar.getConfig().getHealthCheckTimeoutInSeconds(),
+                        TimeUnit.SECONDS);
+
+                if (!locked) {
+                    throw new TimeoutException("Timed out waiting for health check lock");
+                }
+                Boolean healthyDoubleCheck = healthCheckCache.getIfPresent(topicVersion.name());
+                if (Boolean.TRUE.equals(healthyDoubleCheck)) {
+                    healthCheckFuture.complete(null);
+                }
+
+                checkDeadlockedThreads();
+            } catch (Throwable e) {
+                healthCheckFuture.completeExceptionally(e);
+            }
+        }, executor()).whenComplete((__, ex) -> {
+            if (healthCheckFuture.isDone()) {
+                healthCheckLock.unlock();
+                return;
+            }
+
+            if (ex != null) {
+                healthCheckFuture.completeExceptionally(ex);
+                healthCheckLock.unlock();
+                return;
+            }
+
+            CompletableFuture<Void> future = internalRunHealthCheck(topicVersion, clientId);
+            try {
+                future.get(pulsar.getConfig().getHealthCheckTimeoutInSeconds(), TimeUnit.SECONDS);
+                healthCheckCache.put(topicVersion.name(), true);
+                healthCheckFuture.complete(null);
+            } catch (Throwable e) {
+                healthCheckFuture.completeExceptionally(e);
+            } finally {
+                healthCheckLock.unlock();
+            }
+        });
+
+        return healthCheckFuture;
+    }
+
+    private CompletableFuture<Void> healthCheckRecursiveReadNext(Reader<String> reader, String content) {
+        return reader.readNextAsync()
+                .thenCompose(msg -> {
+                    if (!Objects.equals(content, msg.getValue())) {
+                        return healthCheckRecursiveReadNext(reader, content);
+                    }
+                    return CompletableFuture.completedFuture(null);
+                });
+    }
+
+
+    /**
+     * Close producer and reader and then to re-check if this operation is success.
+     *
+     * Re-check
+     * - Producer: If close fails we will print error log to notify user.
+     * - Consumer: If close fails we will force delete subscription.
+     *
+     * @param producer         Producer
+     * @param reader           Reader
+     * @param topic            Topic
+     * @param subscriptionName Subscription name
+     */
+    private CompletableFuture<Void> closeAndReCheck(Producer<String> producer, Reader<String> reader,
+                                                    Topic topic, String subscriptionName, String clientId) {
+        // no matter exception or success, we still need to
+        // close producer/reader
+        CompletableFuture<Void> producerFuture = producer.closeAsync();
+        CompletableFuture<Void> readerFuture = reader.closeAsync();
+        List<CompletableFuture<Void>> futures = new ArrayList<>(2);
+        futures.add(producerFuture);
+        futures.add(readerFuture);
+        return FutureUtil.waitForAll(Collections.unmodifiableList(futures))
+                .exceptionally(closeException -> {
+                    if (readerFuture.isCompletedExceptionally()) {
+                        log.error("[{}] Close reader fail while heath check.", clientId);
+                        Subscription subscription =
+                                topic.getSubscription(subscriptionName);
+                        // re-check subscription after reader close
+                        if (subscription != null) {
+                            log.warn("[{}] Force delete subscription {} "
+                                            + "when it still exists after the"
+                                            + " reader is closed.",
+                                    clientId, subscription);
+                            subscription.deleteForcefully()
+                                    .exceptionally(ex -> {
+                                        log.error("[{}] Force delete subscription fail"
+                                                        + " while health check",
+                                                clientId, ex);
+                                        return null;
+                                    });
+                        }
+                    } else {
+                        // producer future fail.
+                        log.error("[{}] Close producer fail while heath check.", clientId);
+                    }
+                    return null;
+                });
     }
 }

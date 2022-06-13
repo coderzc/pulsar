@@ -337,4 +337,6 @@ public interface PulsarClient extends Closeable {
      * @since 2.7.0
      */
     TransactionBuilder newTransaction() throws PulsarClientException;
+
+    CompletableFuture<HealthCheckResult> healthCheck();
 }

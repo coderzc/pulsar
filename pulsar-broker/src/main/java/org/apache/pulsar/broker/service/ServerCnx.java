@@ -107,6 +107,7 @@ import org.apache.pulsar.common.api.proto.CommandGetLastMessageId;
 import org.apache.pulsar.common.api.proto.CommandGetOrCreateSchema;
 import org.apache.pulsar.common.api.proto.CommandGetSchema;
 import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespace;
+import org.apache.pulsar.common.api.proto.CommandHealthCheck;
 import org.apache.pulsar.common.api.proto.CommandLookupTopic;
 import org.apache.pulsar.common.api.proto.CommandNewTxn;
 import org.apache.pulsar.common.api.proto.CommandPartitionedTopicMetadata;
@@ -134,6 +135,7 @@ import org.apache.pulsar.common.intercept.InterceptException;
 import org.apache.pulsar.common.naming.Metadata;
 import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.naming.TopicVersion;
 import org.apache.pulsar.common.policies.data.BacklogQuota;
 import org.apache.pulsar.common.policies.data.BacklogQuota.BacklogQuotaType;
 import org.apache.pulsar.common.policies.data.NamespaceOperation;
@@ -2510,6 +2512,18 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
                         transactionMetadataStoreService.handleOpFail(ex, tcId);
                     }
                 }));
+    }
+
+    @Override
+    protected void handleHealthCheck(CommandHealthCheck command) {
+        try {
+            service.internalRunHealthCheckWithCache(TopicVersion.V2, clientSourceAddress()).get();
+            ctx.writeAndFlush(Commands.newHealthCheckResponse(command.getRequestId(), true, null, null));
+        } catch (Throwable throwable) {
+            ctx.writeAndFlush(Commands.newHealthCheckResponse(command.getRequestId(), false,
+                    BrokerServiceException.getClientErrorCode(throwable),
+                    throwable.getMessage()));
+        }
     }
 
     @Override
