@@ -132,7 +132,7 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
                 .build();
 
         @Cleanup
-        Producer<byte[]> producer = client.newProducer(Schema.BYTES)
+        Producer<String> producer = client.newProducer(Schema.STRING)
             .topic("persistent://sample/test/local/producer-consumer-topic")
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -140,23 +140,27 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
 
         // Create a consumer directly attached to broker
         @Cleanup
-        Consumer<byte[]> consumer = pulsarClient.newConsumer()
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
                 .topic("persistent://sample/test/local/producer-consumer-topic").subscriptionName("my-sub").subscribe();
 
         for (int i = 0; i < 20; i++) {
-            String s = "message-" + i;
-            producer.send(s.getBytes());
+            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
+                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
+                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            producer.send(s);
         }
 
         for (int i = 0; i < 20; i++) {
-            Message<byte[]> msg = consumer.receive(1, TimeUnit.SECONDS);
+            Message<String> msg = consumer.receive(1, TimeUnit.SECONDS);
             requireNonNull(msg);
-            String s = "message-" + i;
-            Assert.assertEquals(msg.getValue(), s.getBytes());
+            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
+                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
+                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            Assert.assertEquals(msg.getValue(), s);
             consumer.acknowledge(msg);
         }
 
-        Message<byte[]> msg = consumer.receive(0, TimeUnit.SECONDS);
+        Message<String> msg = consumer.receive(0, TimeUnit.SECONDS);
         checkArgument(msg == null);
     }
 

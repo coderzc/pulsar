@@ -171,10 +171,10 @@ test_group_pulsar_connectors_process() {
   mvn_run_integration_test --retry "$@" -DintegrationTestSuiteFile=pulsar-process.xml -DintegrationTests -Dgroups=function
 
   # run integration source
-  mvn_run_integration_test --retry --skip-build-deps "$@" -DintegrationTestSuiteFile=pulsar-process.xml -DintegrationTests -Dgroups=source
-
-  # run integraion sink
-  mvn_run_integration_test --retry --skip-build-deps "$@" -DintegrationTestSuiteFile=pulsar-process.xml -DintegrationTests -Dgroups=sink
+#  mvn_run_integration_test --retry --skip-build-deps "$@" -DintegrationTestSuiteFile=pulsar-process.xml -DintegrationTests -Dgroups=source
+#
+#  # run integraion sink
+#  mvn_run_integration_test --retry --skip-build-deps "$@" -DintegrationTestSuiteFile=pulsar-process.xml -DintegrationTests -Dgroups=sink
 }
 
 test_group_sql() {

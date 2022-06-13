@@ -19,9 +19,7 @@
 package org.apache.pulsar.tests.integration.functions.java;
 
 import static org.testng.Assert.assertEquals;
-
 import java.util.Collections;
-
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.common.policies.data.FunctionStatus;
 import org.apache.pulsar.common.policies.data.FunctionStatusUtil;
@@ -38,25 +36,25 @@ public class PulsarFunctionsJavaTest extends PulsarFunctionsTest {
 		super(functionRuntimeType);
 	}
 
-   @Test(groups = {"java_function", "function"})
-    public void testJavaFunctionLocalRun() throws Exception {
-        testFunctionLocalRun(Runtime.JAVA);
-    }
+//   @Test(groups = {"java_function", "function"})
+//    public void testJavaFunctionLocalRun() throws Exception {
+//        testFunctionLocalRun(Runtime.JAVA);
+//    }
 
    @Test(groups = {"java_function", "function"})
    public void testJavaFunctionNegAck() throws Exception {
        testFunctionNegAck(Runtime.JAVA);
    }
 
-   @Test(groups = {"java_function", "function"})
-   public void testJavaPublishFunction() throws Exception {
-       testPublishFunction(Runtime.JAVA);
-   }
-
-   @Test(groups = {"java_function", "function"})
-   public void testSerdeFunction() throws Exception {
-       testCustomSerdeFunction();
-   }
+//   @Test(groups = {"java_function", "function"})
+//   public void testJavaPublishFunction() throws Exception {
+//       testPublishFunction(Runtime.JAVA);
+//   }
+//
+//   @Test(groups = {"java_function", "function"})
+//   public void testSerdeFunction() throws Exception {
+//       testCustomSerdeFunction();
+//   }
 
    private void testCustomSerdeFunction() throws Exception {
        if (functionRuntimeType == FunctionRuntimeType.THREAD) {
@@ -96,96 +94,96 @@ public class PulsarFunctionsJavaTest extends PulsarFunctionsTest {
    }
 
 
-   @Test(groups = {"java_function", "function"})
-   public void testJavaExclamationFunction() throws Exception {
-       testExclamationFunction(Runtime.JAVA, false, false, false);
-   }
+//   @Test(groups = {"java_function", "function"})
+//   public void testJavaExclamationFunction() throws Exception {
+//       testExclamationFunction(Runtime.JAVA, false, false, false);
+//   }
 
-   @Test(groups = {"java_function", "function"})
-   public void testJavaExclamationTopicPatternFunction() throws Exception {
-       testExclamationFunction(Runtime.JAVA, true, false, false);
-   }
-
-   @Test(groups = {"java_function", "function"})
-   public void testJavaLoggingFunction() throws Exception {
-       testLoggingFunction(Runtime.JAVA);
-   }
-
-
-   @Test(groups = {"java_function", "function"})
-   public void testInitFunction() throws Exception {
-	   testInitFunction(Runtime.JAVA);
-   }
-
-   @Test(groups = {"java_function", "function"})
-   public void testTumblingCountWindowTest() throws Exception {
-       String[] EXPECTED_RESULTS = {
-               "0,1,2,3,4,5,6,7,8,9",
-               "10,11,12,13,14,15,16,17,18,19",
-               "20,21,22,23,24,25,26,27,28,29",
-               "30,31,32,33,34,35,36,37,38,39",
-               "40,41,42,43,44,45,46,47,48,49",
-               "50,51,52,53,54,55,56,57,58,59",
-               "60,61,62,63,64,65,66,67,68,69",
-               "70,71,72,73,74,75,76,77,78,79",
-               "80,81,82,83,84,85,86,87,88,89",
-               "90,91,92,93,94,95,96,97,98,99",
-       };
-
-       testWindowFunction("tumbling", EXPECTED_RESULTS);
-   }
-
-   @Test(groups = {"java_function", "function"})
-   public void testSlidingCountWindowTest() throws Exception {
-       String[] EXPECTED_RESULTS = {
-               "0,1,2,3,4",
-               "0,1,2,3,4,5,6,7,8,9",
-               "5,6,7,8,9,10,11,12,13,14",
-               "10,11,12,13,14,15,16,17,18,19",
-               "15,16,17,18,19,20,21,22,23,24",
-               "20,21,22,23,24,25,26,27,28,29",
-               "25,26,27,28,29,30,31,32,33,34",
-               "30,31,32,33,34,35,36,37,38,39",
-               "35,36,37,38,39,40,41,42,43,44",
-               "40,41,42,43,44,45,46,47,48,49",
-               "45,46,47,48,49,50,51,52,53,54",
-               "50,51,52,53,54,55,56,57,58,59",
-               "55,56,57,58,59,60,61,62,63,64",
-               "60,61,62,63,64,65,66,67,68,69",
-               "65,66,67,68,69,70,71,72,73,74",
-               "70,71,72,73,74,75,76,77,78,79",
-               "75,76,77,78,79,80,81,82,83,84",
-               "80,81,82,83,84,85,86,87,88,89",
-               "85,86,87,88,89,90,91,92,93,94",
-               "90,91,92,93,94,95,96,97,98,99",
-       };
-
-       testWindowFunction("sliding", EXPECTED_RESULTS);
-   }
-
-    @Test(groups = {"java_function", "function"})
-    public void testMergeFunctionTest() throws Exception {
-	    testMergeFunction();
-   }
-
-    @Test(groups = {"java_function", "function"})
-    public void testGenericObjectFunction() throws Exception {
-        testGenericObjectFunction(GENERIC_OBJECT_FUNCTION_JAVA_CLASS, false, false);
-    }
-
-    @Test(groups = {"java_function", "function"})
-    public void testGenericObjectRemoveFiledFunction() throws Exception {
-        testGenericObjectFunction(REMOVE_AVRO_FIELD_FUNCTION_JAVA_CLASS, true, false);
-    }
-
-    @Test(groups = {"java_function", "function"})
-    public void testGenericObjectFunctionKeyValue() throws Exception {
-        testGenericObjectFunction(GENERIC_OBJECT_FUNCTION_JAVA_CLASS, false, true);
-    }
-
-    @Test(groups = {"java_function", "function"})
-    public void testGenericObjectRemoveFiledFunctionKeyValue() throws Exception {
-        testGenericObjectFunction(REMOVE_AVRO_FIELD_FUNCTION_JAVA_CLASS, true, true);
-    }
+//   @Test(groups = {"java_function", "function"})
+//   public void testJavaExclamationTopicPatternFunction() throws Exception {
+//       testExclamationFunction(Runtime.JAVA, true, false, false);
+//   }
+//
+//   @Test(groups = {"java_function", "function"})
+//   public void testJavaLoggingFunction() throws Exception {
+//       testLoggingFunction(Runtime.JAVA);
+//   }
+//
+//
+//   @Test(groups = {"java_function", "function"})
+//   public void testInitFunction() throws Exception {
+//	   testInitFunction(Runtime.JAVA);
+//   }
+//
+//   @Test(groups = {"java_function", "function"})
+//   public void testTumblingCountWindowTest() throws Exception {
+//       String[] EXPECTED_RESULTS = {
+//               "0,1,2,3,4,5,6,7,8,9",
+//               "10,11,12,13,14,15,16,17,18,19",
+//               "20,21,22,23,24,25,26,27,28,29",
+//               "30,31,32,33,34,35,36,37,38,39",
+//               "40,41,42,43,44,45,46,47,48,49",
+//               "50,51,52,53,54,55,56,57,58,59",
+//               "60,61,62,63,64,65,66,67,68,69",
+//               "70,71,72,73,74,75,76,77,78,79",
+//               "80,81,82,83,84,85,86,87,88,89",
+//               "90,91,92,93,94,95,96,97,98,99",
+//       };
+//
+//       testWindowFunction("tumbling", EXPECTED_RESULTS);
+//   }
+//
+//   @Test(groups = {"java_function", "function"})
+//   public void testSlidingCountWindowTest() throws Exception {
+//       String[] EXPECTED_RESULTS = {
+//               "0,1,2,3,4",
+//               "0,1,2,3,4,5,6,7,8,9",
+//               "5,6,7,8,9,10,11,12,13,14",
+//               "10,11,12,13,14,15,16,17,18,19",
+//               "15,16,17,18,19,20,21,22,23,24",
+//               "20,21,22,23,24,25,26,27,28,29",
+//               "25,26,27,28,29,30,31,32,33,34",
+//               "30,31,32,33,34,35,36,37,38,39",
+//               "35,36,37,38,39,40,41,42,43,44",
+//               "40,41,42,43,44,45,46,47,48,49",
+//               "45,46,47,48,49,50,51,52,53,54",
+//               "50,51,52,53,54,55,56,57,58,59",
+//               "55,56,57,58,59,60,61,62,63,64",
+//               "60,61,62,63,64,65,66,67,68,69",
+//               "65,66,67,68,69,70,71,72,73,74",
+//               "70,71,72,73,74,75,76,77,78,79",
+//               "75,76,77,78,79,80,81,82,83,84",
+//               "80,81,82,83,84,85,86,87,88,89",
+//               "85,86,87,88,89,90,91,92,93,94",
+//               "90,91,92,93,94,95,96,97,98,99",
+//       };
+//
+//       testWindowFunction("sliding", EXPECTED_RESULTS);
+//   }
+//
+//    @Test(groups = {"java_function", "function"})
+//    public void testMergeFunctionTest() throws Exception {
+//	    testMergeFunction();
+//   }
+//
+//    @Test(groups = {"java_function", "function"})
+//    public void testGenericObjectFunction() throws Exception {
+//        testGenericObjectFunction(GENERIC_OBJECT_FUNCTION_JAVA_CLASS, false, false);
+//    }
+//
+//    @Test(groups = {"java_function", "function"})
+//    public void testGenericObjectRemoveFiledFunction() throws Exception {
+//        testGenericObjectFunction(REMOVE_AVRO_FIELD_FUNCTION_JAVA_CLASS, true, false);
+//    }
+//
+//    @Test(groups = {"java_function", "function"})
+//    public void testGenericObjectFunctionKeyValue() throws Exception {
+//        testGenericObjectFunction(GENERIC_OBJECT_FUNCTION_JAVA_CLASS, false, true);
+//    }
+//
+//    @Test(groups = {"java_function", "function"})
+//    public void testGenericObjectRemoveFiledFunctionKeyValue() throws Exception {
+//        testGenericObjectFunction(REMOVE_AVRO_FIELD_FUNCTION_JAVA_CLASS, true, true);
+//    }
 
 }
