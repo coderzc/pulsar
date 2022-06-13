@@ -456,8 +456,6 @@ jobs:
     timeout-minutes: 10
     needs: [
       'changed_files_job',
-      'unit-tests',
-      'integration-tests',
       'system-tests'
     ]
     if: ${{ needs.changed_files_job.outputs.docs_only != 'true' }}
