@@ -359,15 +359,11 @@ public class DirectProxyHandler {
                 inboundChannel.writeAndFlush(msg)
                         .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
-                if (ctx.channel().pipeline().get("frameDecoder") != null) {
-                    if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
-                        if (!this.isTlsInboundChannel && !ProxyConnection.isTlsChannel(ctx.channel())) {
-                            DirectProxyHandler.this.proxyConnection.spliceNIC2NIC((EpollSocketChannel) ctx.channel(),
-                                    (EpollSocketChannel) inboundChannel);
-                        }
+                if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
+                    if (!this.isTlsInboundChannel && !ProxyConnection.isTlsChannel(ctx.channel())) {
+                        DirectProxyHandler.this.proxyConnection.spliceNIC2NIC((EpollSocketChannel) ctx.channel(),
+                                (EpollSocketChannel) inboundChannel);
                     }
-                } else {
-                    log.warn("have frameDecoder!!! :" + msg.getClass().getName());
                 }
 
                 break;
@@ -427,10 +423,11 @@ public class DirectProxyHandler {
                 log.debug("[{}] [{}] Received Connected from broker", inboundChannel, outboundChannel);
             }
 
+            startDirectProxying(connected);
+
             state = BackendState.HandshakeCompleted;
 
             onHandshakeCompleteAction.run();
-            startDirectProxying(connected);
 
             proxyConnection.brokerConnected(DirectProxyHandler.this, connected);
         }

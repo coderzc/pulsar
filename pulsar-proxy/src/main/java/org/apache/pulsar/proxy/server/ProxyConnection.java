@@ -250,16 +250,12 @@ public class ProxyConnection extends PulsarHandler {
                 directProxyHandler.outboundChannel.writeAndFlush(msg)
                         .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
-                if (ctx.channel().pipeline().get("frameDecoder") != null) {
-                    if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
-                        if (!ProxyConnection.isTlsChannel(ctx.channel())
-                                && !ProxyConnection.isTlsChannel(directProxyHandler.outboundChannel)) {
-                            spliceNIC2NIC((EpollSocketChannel) ctx.channel(),
-                                    (EpollSocketChannel) directProxyHandler.outboundChannel);
-                        }
+                if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
+                    if (!ProxyConnection.isTlsChannel(ctx.channel())
+                            && !ProxyConnection.isTlsChannel(directProxyHandler.outboundChannel)) {
+                        spliceNIC2NIC((EpollSocketChannel) ctx.channel(),
+                                (EpollSocketChannel) directProxyHandler.outboundChannel);
                     }
-                } else {
-                    LOG.warn("have frameDecoder!!! :" + msg.getClass().getName());
                 }
             } else {
                 LOG.warn("Received message of type {} while connection to broker is missing in state {}. "
