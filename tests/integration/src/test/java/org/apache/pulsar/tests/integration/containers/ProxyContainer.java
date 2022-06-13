@@ -18,8 +18,6 @@
  */
 package org.apache.pulsar.tests.integration.containers;
 
-import org.apache.pulsar.tests.integration.utils.DockerUtils;
-
 /**
  * A pulsar container that runs bookkeeper.
  */
@@ -38,11 +36,5 @@ public class ProxyContainer extends PulsarContainer<ProxyContainer> {
 
     public String getHttpServiceUrl() {
         return "http://" + getContainerIpAddress() + ":" + getMappedPort(BROKER_HTTP_PORT);
-    }
-
-    @Override
-    protected void afterStart() {
-        DockerUtils.runCommandAsyncWithLogging(this.dockerClient, this.getContainerId(),
-                "tail", "-f", "/var/log/pulsar/proxy.log");
     }
 }
