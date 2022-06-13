@@ -32,6 +32,7 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.channels.ClosedChannelException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -287,10 +288,12 @@ public class ProxyConnection extends PulsarHandler {
         inboundChannel.spliceTo(outboundChannel, SPLICE_BYTES, promise);
         promise.addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
-                LOG.info("successful splice data");
-                future.channel().pipeline().fireExceptionCaught(future.cause());
+                LOG.warn("failed splice data:", future.cause());
+                if (!(future.cause() instanceof ClosedChannelException)) {
+                    future.channel().pipeline().fireExceptionCaught(future.cause());
+                }
             } else {
-                LOG.warn("failed splice data");
+                LOG.info("successful splice data");
                 ProxyService.OPS_COUNTER.inc();
                 directProxyHandler.getInboundChannelRequestsRate().recordEvent(SPLICE_BYTES);
                 ProxyService.BYTES_COUNTER.inc(SPLICE_BYTES);

@@ -165,6 +165,84 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
+    public void testProducerConsumer2() throws Exception {
+        @Cleanup
+        PulsarClient client = PulsarClient.builder().serviceUrl(proxyService.getServiceUrl())
+                .build();
+
+        @Cleanup
+        Producer<String> producer = client.newProducer(Schema.STRING)
+                .topic("persistent://sample/test/local/producer-consumer-topic")
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
+
+        // Create a consumer directly attached to broker
+        @Cleanup
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
+                .topic("persistent://sample/test/local/producer-consumer-topic").subscriptionName("my-sub").subscribe();
+
+        for (int i = 0; i < 20; i++) {
+            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
+                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
+                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            producer.send(s);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            Message<String> msg = consumer.receive(1, TimeUnit.SECONDS);
+            requireNonNull(msg);
+            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
+                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
+                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            Assert.assertEquals(msg.getValue(), s);
+            consumer.acknowledge(msg);
+        }
+
+        Message<String> msg = consumer.receive(0, TimeUnit.SECONDS);
+        checkArgument(msg == null);
+    }
+
+    @Test
+    public void testProducerConsumer3() throws Exception {
+        @Cleanup
+        PulsarClient client = PulsarClient.builder().serviceUrl(proxyService.getServiceUrl())
+                .build();
+
+        @Cleanup
+        Producer<String> producer = client.newProducer(Schema.STRING)
+                .topic("persistent://sample/test/local/producer-consumer-topic")
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
+
+        // Create a consumer directly attached to broker
+        @Cleanup
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
+                .topic("persistent://sample/test/local/producer-consumer-topic").subscriptionName("my-sub").subscribe();
+
+        for (int i = 0; i < 20; i++) {
+            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
+                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
+                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            producer.send(s);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            Message<String> msg = consumer.receive(1, TimeUnit.SECONDS);
+            requireNonNull(msg);
+            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
+                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
+                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            Assert.assertEquals(msg.getValue(), s);
+            consumer.acknowledge(msg);
+        }
+
+        Message<String> msg = consumer.receive(0, TimeUnit.SECONDS);
+        checkArgument(msg == null);
+    }
+
+    @Test
     public void testPartitions() throws Exception {
         TenantInfoImpl tenantInfo = createDefaultTenantInfo();
         admin.tenants().createTenant("sample", tenantInfo);
