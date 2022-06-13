@@ -23,7 +23,6 @@
     <test name="pulsar-function-process-test-suite" preserve-order="true" >
         <classes>
             <class name="org.apache.pulsar.tests.integration.functions.java.PulsarFunctionsJavaProcessTest"/>
-            <class name="org.apache.pulsar.tests.integration.functions.python.PulsarFunctionsPythonProcessTest" />
         </classes>
     </test>
 </suite>
