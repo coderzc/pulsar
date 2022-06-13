@@ -27,7 +27,7 @@
 # PULSAR_LOG_CONF=
 
 # Logs location
-PULSAR_LOG_DIR=/var/log/pulsar/proxy.log
+# PULSAR_LOG_DIR=/var/log/pulsar/proxy.log
 
 # Configuration file of settings used in broker server
 # PULSAR_BROKER_CONF=
