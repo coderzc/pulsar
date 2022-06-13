@@ -250,6 +250,9 @@ public class ProxyConnection extends PulsarHandler {
                 directProxyHandler.outboundChannel.writeAndFlush(msg)
                         .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
+                if (ctx.channel().pipeline().get("frameDecoder") != null) {
+                    LOG.warn("have frameDecoder!!! ");
+                }
                 if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
                     if (!ProxyConnection.isTlsChannel(ctx.channel())
                             && !ProxyConnection.isTlsChannel(directProxyHandler.outboundChannel)) {

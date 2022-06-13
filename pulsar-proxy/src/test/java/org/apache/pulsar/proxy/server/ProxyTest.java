@@ -40,6 +40,7 @@ import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageRoutingMode;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -144,13 +145,16 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
                 .topic("persistent://sample/test/local/producer-consumer-topic").subscriptionName("my-sub").subscribe();
 
-        for (int i = 0; i < 10; i++) {
-            producer.send("test".getBytes());
+        for (int i = 0; i < 20; i++) {
+            String s = "message-" + i;
+            producer.send(s.getBytes());
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
             Message<byte[]> msg = consumer.receive(1, TimeUnit.SECONDS);
             requireNonNull(msg);
+            String s = "message-" + i;
+            Assert.assertEquals(msg.getValue(), s.getBytes());
             consumer.acknowledge(msg);
         }
 

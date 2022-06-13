@@ -132,6 +132,18 @@ jobs:
         with:
           action: wait
 
+  unit-tests:
+    name: CI - Unit - ${{ matrix.name }}
+    runs-on: ubuntu-20.04
+    timeout-minutes: ${{ matrix.timeout || 60 }}
+    needs: [ 'changed_files_job', 'build-and-license-check' ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Proxy
+            group: PROXY
+
   pulsar-java-test-image:
     name: Build Pulsar java-test-image docker image
     runs-on: ubuntu-20.04
