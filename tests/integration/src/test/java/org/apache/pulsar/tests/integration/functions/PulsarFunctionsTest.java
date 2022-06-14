@@ -24,7 +24,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -68,10 +67,9 @@ import org.apache.pulsar.common.schema.KeyValueEncodingType;
 import org.apache.pulsar.common.schema.SchemaInfo;
 import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
-import org.apache.pulsar.functions.api.examples.AutoSchemaFunction;
 import org.apache.pulsar.functions.api.examples.AvroSchemaTestFunction;
-import org.apache.pulsar.functions.api.examples.MergeTopicFunction;
 import org.apache.pulsar.functions.api.examples.InitializableFunction;
+import org.apache.pulsar.functions.api.examples.MergeTopicFunction;
 import org.apache.pulsar.functions.api.examples.pojo.AvroTestObject;
 import org.apache.pulsar.functions.api.examples.pojo.Users;
 import org.apache.pulsar.functions.api.examples.serde.CustomObject;
@@ -1256,42 +1254,42 @@ public abstract class PulsarFunctionsTest extends PulsarFunctionsTestBase {
         result.assertNoStderr();
     }
 
-    @Test(groups = "function")
-    public void testAutoSchemaFunction() throws Exception {
-        String inputTopicName = "test-autoschema-input-" + randomName(8);
-        String outputTopicName = "test-autoshcema-output-" + randomName(8);
-        String functionName = "test-autoschema-fn-" + randomName(8);
-        final int numMessages = 10;
-
-
-        // submit the exclamation function
-        submitFunction(
-                Runtime.JAVA,
-                inputTopicName,
-                outputTopicName,
-                functionName,
-                false,
-                false,
-                false,
-                AutoSchemaFunction.class.getName(),
-                Schema.AVRO(CustomObject.class));
-
-        // get function info
-        getFunctionInfoSuccess(functionName);
-
-        // publish and consume result
-        publishAndConsumeAvroMessages(inputTopicName, outputTopicName, numMessages);
-
-        // get function status. Note that this function might restart a few times until
-        // the producer above writes the messages.
-        getFunctionStatus(functionName, numMessages, false);
-
-        // delete function
-        deleteFunction(functionName);
-
-        // get function info
-        getFunctionInfoNotFound(functionName);
-    }
+//    @Test(groups = "function")
+//    public void testAutoSchemaFunction() throws Exception {
+//        String inputTopicName = "test-autoschema-input-" + randomName(8);
+//        String outputTopicName = "test-autoshcema-output-" + randomName(8);
+//        String functionName = "test-autoschema-fn-" + randomName(8);
+//        final int numMessages = 10;
+//
+//
+//        // submit the exclamation function
+//        submitFunction(
+//                Runtime.JAVA,
+//                inputTopicName,
+//                outputTopicName,
+//                functionName,
+//                false,
+//                false,
+//                false,
+//                AutoSchemaFunction.class.getName(),
+//                Schema.AVRO(CustomObject.class));
+//
+//        // get function info
+//        getFunctionInfoSuccess(functionName);
+//
+//        // publish and consume result
+//        publishAndConsumeAvroMessages(inputTopicName, outputTopicName, numMessages);
+//
+//        // get function status. Note that this function might restart a few times until
+//        // the producer above writes the messages.
+//        getFunctionStatus(functionName, numMessages, false);
+//
+//        // delete function
+//        deleteFunction(functionName);
+//
+//        // get function info
+//        getFunctionInfoNotFound(functionName);
+//    }
 
     private void publishAndConsumeAvroMessages(String inputTopic,
                                                String outputTopic,

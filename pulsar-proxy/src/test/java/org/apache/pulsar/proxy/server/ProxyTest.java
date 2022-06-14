@@ -219,6 +219,7 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
         // Create a consumer directly attached to broker
         @Cleanup
         Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
+                .negativeAckRedeliveryDelay(2, TimeUnit.SECONDS)
                 .topic("persistent://sample/test/local/producer-consumer-topic").subscriptionName("my-sub").subscribe();
 
         for (int i = 0; i < 20; i++) {
@@ -227,7 +228,7 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
         }
 
         for (int i = 0; i < 20; i++) {
-            Message<String> msg = consumer.receive(1, TimeUnit.SECONDS);
+            Message<String> msg = consumer.receive(10, TimeUnit.SECONDS);
             requireNonNull(msg);
             try {
                 String s = "message-" + i + "!";
@@ -239,8 +240,16 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
                 consumer.acknowledge(msg);
             } catch (Exception e) {
                 consumer.negativeAcknowledge(msg);
-                i--;
             }
+        }
+
+        for (int i = 0; i < 2; i++) {
+            Message<String> msg = consumer.receive(10, TimeUnit.SECONDS);
+            requireNonNull(msg);
+            String s = "message-" + i*10 + "!";
+            log.info("received:{}", msg.getValue());
+            Assert.assertEquals(msg.getValue(), s);
+            consumer.acknowledge(msg);
         }
 
         Message<String> msg = consumer.receive(0, TimeUnit.SECONDS);
