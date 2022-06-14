@@ -92,6 +92,7 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
         proxyConfig.setBrokerProxyAllowedTargetPorts("*");
         proxyConfig.setMetadataStoreUrl(DUMMY_VALUE);
         proxyConfig.setConfigurationMetadataStoreUrl(GLOBAL_DUMMY_VALUE);
+        proxyConfig.setBrokerProxyReadTimeoutMs(5000);
 
         proxyService = Mockito.spy(new ProxyService(proxyConfig, new AuthenticationService(
                                                             PulsarConfigurationLoader.convertFrom(proxyConfig))));
@@ -242,6 +243,8 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
                 consumer.negativeAcknowledge(msg);
             }
         }
+
+        Thread.sleep(10000);
 
         for (int i = 0; i < 2; i++) {
             Message<String> msg = consumer.receive(10, TimeUnit.SECONDS);

@@ -251,6 +251,9 @@ public class ProxyConnection extends PulsarHandler {
                 directProxyHandler.outboundChannel.writeAndFlush(msg)
                         .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 
+//                if (System.currentTimeMillis() % 10 == 0) {
+//                    throw new RuntimeException("test");
+//                }
                 if (ctx.channel().pipeline().get("frameDecoder") != null) {
                     LOG.warn("have frameDecoder!!! ");
                 }
