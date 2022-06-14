@@ -29,7 +29,6 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.resolver.dns.DnsAddressResolverGroup;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -257,10 +256,6 @@ public class ProxyConnection extends PulsarHandler {
 //                }
                 if (ctx.channel().pipeline().get("frameDecoder") != null) {
                     LOG.warn("have frameDecoder!!! ");
-                }
-                if (ctx.pipeline().get(IdleStateHandler.class) != null) {
-                    ctx.pipeline().remove(IdleStateHandler.class);
-                    System.out.println("removed");
                 }
                 if (service.proxyZeroCopyModeEnabled && service.proxyLogLevel == 0) {
                     if (!ProxyConnection.isTlsChannel(ctx.channel())

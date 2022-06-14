@@ -244,8 +244,6 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
             }
         }
 
-        Thread.sleep(10000);
-
         for (int i = 0; i < 2; i++) {
             Message<String> msg = consumer.receive(10, TimeUnit.SECONDS);
             requireNonNull(msg);
