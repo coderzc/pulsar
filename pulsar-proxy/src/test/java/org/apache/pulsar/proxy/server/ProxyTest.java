@@ -222,20 +222,25 @@ public class ProxyTest extends MockedPulsarServiceBaseTest {
                 .topic("persistent://sample/test/local/producer-consumer-topic").subscriptionName("my-sub").subscribe();
 
         for (int i = 0; i < 20; i++) {
-            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
-                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
-                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
+            String s = "message-" + i + "!";
             producer.send(s);
         }
 
         for (int i = 0; i < 20; i++) {
             Message<String> msg = consumer.receive(1, TimeUnit.SECONDS);
             requireNonNull(msg);
-            String s = "asssdfasdfasdfasdfasdfsjsdklfhaskdjlasdjhfkljasfheuhh"
-                    + "fjdfsdofdhujdnfafksdfgajsdhgfahjsdgflahjsdgfkhjasgdfjkh"
-                    + "agsdkhfgajksdfgkjasgdfkjgaskjdfmessage-" + i + "!";
-            Assert.assertEquals(msg.getValue(), s);
-            consumer.acknowledge(msg);
+            try {
+                String s = "message-" + i + "!";
+                log.info("received:{}", msg.getValue());
+                Assert.assertEquals(msg.getValue(), s);
+                if (i % 10 == 0) {
+                    throw new RuntimeException("test");
+                }
+                consumer.acknowledge(msg);
+            } catch (Exception e) {
+                consumer.negativeAcknowledge(msg);
+                i--;
+            }
         }
 
         Message<String> msg = consumer.receive(0, TimeUnit.SECONDS);
