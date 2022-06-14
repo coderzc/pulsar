@@ -106,7 +106,7 @@ public class ProxyConnection extends PulsarHandler {
     private String proxyToBrokerUrl;
     private HAProxyMessage haProxyMessage;
 
-    private static final Integer SPLICE_BYTES = 1024 * 1024 * 1024;
+    private static final Integer SPLICE_BYTES = 16;
     private static final byte[] EMPTY_CREDENTIALS = new byte[0];
 
     enum State {
