@@ -337,12 +337,12 @@ jobs:
             group: PULSAR_CONNECTORS_PROCESS
 
     steps:
-      - uses: shaowenchen/debugger-action@v2
-        name: debugger
-        timeout-minutes: 300
-        continue-on-error: true
-        with:
-          ngrok_token: ${{ secrets.NGROK_TOKEN }}
+#      - uses: shaowenchen/debugger-action@v2
+#        name: debugger
+#        timeout-minutes: 300
+#        continue-on-error: true
+#        with:
+#          ngrok_token: ${{ secrets.NGROK_TOKEN }}
       - name: checkout
         if: ${{ needs.changed_files_job.outputs.docs_only != 'true' }}
         uses: actions/checkout@v2
