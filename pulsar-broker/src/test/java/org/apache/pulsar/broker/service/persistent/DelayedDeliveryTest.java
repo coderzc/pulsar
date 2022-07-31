@@ -23,25 +23,26 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 import lombok.Cleanup;
-
 import org.apache.pulsar.broker.BrokerTestUtil;
 import org.apache.pulsar.broker.service.Dispatcher;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerConsumerBase;
+import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionType;
@@ -580,4 +581,44 @@ public class DelayedDeliveryTest extends ProducerConsumerBase {
         }
     }
 
+    @Test
+    public void testSubsequenceDelayedMessage() throws PulsarClientException, InterruptedException {
+        final int messageNum = 50;
+        pulsarClient = PulsarClient.builder().
+                serviceUrl(lookupUrl.toString())
+                .build();
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
+                .topic("test")
+                .create();
+
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
+                .topic("test")
+                .subscriptionType(SubscriptionType.Shared)
+                .subscriptionName("test-sub")
+                .subscribe();
+
+        final long baseTime = System.currentTimeMillis();
+        Map<MessageId, Long> messageDeliverTimeMap = new HashMap<>();
+        for (int i = 0; i < messageNum; i++) {
+            long timestamp = baseTime + TimeUnit.SECONDS.toMillis(messageNum - i);
+            MessageId messageId = producer.newMessage()
+                    .deliverAt(timestamp)
+                    .value("message-" + i)
+                    .send();
+            messageDeliverTimeMap.put(messageId, timestamp);
+        }
+
+        long lastTime = 0L;
+        for (int i = 0; i < messageNum; i++) {
+            Message<String> msg = consumer.receive(100, TimeUnit.SECONDS);
+            Long deliverTime = messageDeliverTimeMap.get(msg.getMessageId());
+            assertNotNull(deliverTime);
+            assertTrue(deliverTime >= lastTime);
+            lastTime = deliverTime;
+            consumer.acknowledge(msg);
+            messageDeliverTimeMap.remove(msg.getMessageId());
+        }
+
+        assertTrue(messageDeliverTimeMap.isEmpty());
+    }
 }

@@ -22,8 +22,8 @@ import io.netty.util.Timeout;
 import io.netty.util.Timer;
 import io.netty.util.TimerTask;
 import java.time.Clock;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
@@ -100,7 +100,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
 
     @Override
     public boolean addMessage(long ledgerId, long entryId, long deliverAt) {
-        if (deliverAt < 0 || deliverAt <= getCutoffTime()) {
+        if (deliverAt < 0 || deliverAt <= clock.millis()) {
             messagesHaveFixedDelay = false;
             return false;
         }
@@ -143,7 +143,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
     @Override
     public Set<PositionImpl> getScheduledMessages(int maxMessages) {
         int n = maxMessages;
-        Set<PositionImpl> positions = new TreeSet<>();
+        Set<PositionImpl> positions = new LinkedHashSet<>();
         long cutoffTime = getCutoffTime();
 
         while (n > 0 && !priorityQueue.isEmpty()) {

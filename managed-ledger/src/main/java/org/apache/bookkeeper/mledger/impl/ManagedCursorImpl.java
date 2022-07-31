@@ -102,7 +102,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("checkstyle:javadoctype")
 public class ManagedCursorImpl implements ManagedCursor {
-    private static final Comparator<Entry> ENTRY_COMPARATOR = (e1, e2) -> {
+    public static final Comparator<Entry> ENTRY_COMPARATOR = (e1, e2) -> {
         if (e1.getLedgerId() != e2.getLedgerId()) {
             return e1.getLedgerId() < e2.getLedgerId() ? -1 : 1;
         }
@@ -1345,8 +1345,14 @@ public class ManagedCursorImpl implements ManagedCursor {
     }
 
     @Override
+    public Set<? extends Position> asyncReplayEntries(final Set<? extends Position> positions,
+                                                      ReadEntriesCallback callback, Object ctx, boolean sortEntries) {
+        return asyncReplayEntries(positions, callback, ctx, false, ENTRY_COMPARATOR);
+    }
+
+    @Override
     public Set<? extends Position> asyncReplayEntries(Set<? extends Position> positions,
-            ReadEntriesCallback callback, Object ctx, boolean sortEntries) {
+            ReadEntriesCallback callback, Object ctx, boolean sortEntries, Comparator<Entry> comparator) {
         List<Entry> entries = Lists.newArrayListWithExpectedSize(positions.size());
         if (positions.isEmpty()) {
             callback.readEntriesComplete(entries, ctx);
@@ -1384,7 +1390,7 @@ public class ManagedCursorImpl implements ManagedCursor {
                     entries.add(entry);
                     if (--pendingCallbacks == 0) {
                         if (sortEntries) {
-                            entries.sort(ENTRY_COMPARATOR);
+                            entries.sort(comparator);
                         }
                         callback.readEntriesComplete(entries, ctx);
                     }

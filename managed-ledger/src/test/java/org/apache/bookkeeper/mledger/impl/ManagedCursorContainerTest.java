@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -274,6 +275,13 @@ public class ManagedCursorContainerTest {
 
         @Override
         public Set<? extends Position> asyncReplayEntries(Set<? extends Position> positions, ReadEntriesCallback callback, Object ctx, boolean sortEntries) {
+            return Sets.newConcurrentHashSet();
+        }
+
+        @Override
+        public Set<? extends Position> asyncReplayEntries(Set<? extends Position> positions,
+                                                          ReadEntriesCallback callback, Object ctx, boolean sortEntries,
+                                                          Comparator<Entry> comparator) {
             return Sets.newConcurrentHashSet();
         }
 

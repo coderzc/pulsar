@@ -18,12 +18,16 @@
  */
 package org.apache.pulsar.broker.service.persistent;
 
+import static org.apache.bookkeeper.mledger.impl.ManagedCursorImpl.ENTRY_COMPARATOR;
 import static org.apache.bookkeeper.mledger.util.SafeRun.safeRun;
 import static org.apache.pulsar.broker.service.persistent.PersistentTopic.MESSAGE_RATE_BACKOFF_MS;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
+import com.google.common.collect.Table;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -272,8 +276,10 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
 
                 havePendingReplayRead = true;
                 minReplayedPosition = messagesToReplayNow.stream().min(PositionImpl::compareTo).orElse(null);
-                Set<? extends Position> deletedMessages = topic.isDelayedDeliveryEnabled()
-                        ? asyncReplayEntriesInOrder(messagesToReplayNow) : asyncReplayEntries(messagesToReplayNow);
+
+                Set<? extends Position> deletedMessages = messagesToReplayNow instanceof LinkedHashSet<PositionImpl>
+                        ? asyncReplayEntriesRetainOrdering((LinkedHashSet<? extends Position>) messagesToReplayNow) :
+                        asyncReplayEntries(messagesToReplayNow);
                 // clear already acked positions from replay bucket
 
                 deletedMessages.forEach(position -> redeliveryMessages.remove(((PositionImpl) position).getLedgerId(),
@@ -426,6 +432,26 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
 
     protected Set<? extends Position> asyncReplayEntriesInOrder(Set<? extends Position> positions) {
         return cursor.asyncReplayEntries(positions, this, ReadType.Replay, true);
+    }
+
+    protected Set<? extends Position> asyncReplayEntriesRetainOrdering(LinkedHashSet<? extends Position> positions) {
+        Table<Long, Long, Integer> indexTable = HashBasedTable.create();
+        int i = 0;
+        for (Position position : positions) {
+            indexTable.put(position.getLedgerId(), position.getEntryId(), i);
+            i++;
+        }
+        return cursor.asyncReplayEntries(positions, this, ReadType.Replay, true,
+                (entry1, entry2) -> {
+            Integer index1 = indexTable.get(entry1.getLedgerId(), entry1.getEntryId());
+            Integer index2 = indexTable.get(entry2.getLedgerId(), entry2.getEntryId());
+            assert index1 != null && index2 != null;
+            if (Objects.equals(index1, index2)) {
+                return ENTRY_COMPARATOR.compare(entry1, entry2);
+            } else {
+                return index1 - index2;
+            }
+        });
     }
 
     @Override

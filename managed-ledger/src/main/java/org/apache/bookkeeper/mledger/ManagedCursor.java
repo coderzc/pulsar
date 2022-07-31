@@ -20,6 +20,7 @@ package org.apache.bookkeeper.mledger;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Range;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -599,6 +600,26 @@ public interface ManagedCursor {
      */
     Set<? extends Position> asyncReplayEntries(
             Set<? extends Position> positions, ReadEntriesCallback callback, Object ctx, boolean sortEntries);
+
+    /**
+     * Read the specified set of positions from ManagedLedger.
+     *
+     * @param positions
+     *            set of positions to read
+     * @param callback
+     *            callback object returning the list of entries
+     * @param ctx
+     *            opaque context
+     * @param sortEntries
+     *            callback with sorted entry list.
+     * @param comparator
+     *            comparator used to callback with sorted.
+     * @return skipped positions
+     *              set of positions which are already deleted/acknowledged and skipped while replaying them
+     */
+    Set<? extends Position> asyncReplayEntries(
+            Set<? extends Position> positions, ReadEntriesCallback callback, Object ctx, boolean sortEntries,
+            Comparator<Entry> comparator);
 
     /**
      * Close the cursor and releases the associated resources.
