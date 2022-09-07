@@ -354,6 +354,12 @@ public class ServiceConfiguration implements PulsarConfiguration {
     private boolean acknowledgmentAtBatchIndexLevelEnabled = false;
 
     @FieldContext(
+            category = CATEGORY_SERVER,
+            doc = "Whether to enable share the delayed message index across subscriptions"
+    )
+    private boolean delayedDeliverySharedIndexEnabled = true;
+
+    @FieldContext(
         category = CATEGORY_WEBSOCKET,
         doc = "Enable the WebSocket API service in broker"
     )

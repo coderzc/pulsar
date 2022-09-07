@@ -440,7 +440,7 @@ public class PersistentSubscription extends AbstractSubscription implements Subs
         return pendingAckHandle.cumulativeAcknowledgeMessage(txnId, positions);
     }
 
-    private final MarkDeleteCallback markDeleteCallback = new MarkDeleteCallback() {
+    protected final MarkDeleteCallback markDeleteCallback = new MarkDeleteCallback() {
         @Override
         public void markDeleteComplete(Object ctx) {
             PositionImpl oldMD = (PositionImpl) ctx;

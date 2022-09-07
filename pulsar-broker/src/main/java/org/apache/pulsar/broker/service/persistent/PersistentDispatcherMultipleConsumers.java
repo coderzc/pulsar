@@ -20,6 +20,8 @@ package org.apache.pulsar.broker.service.persistent;
 
 import static org.apache.bookkeeper.mledger.util.SafeRun.safeRun;
 import static org.apache.pulsar.broker.service.persistent.PersistentTopic.MESSAGE_RATE_BACKOFF_MS;
+import static org.apache.pulsar.broker.service.persistent.PersistentTopic.SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION;
+import static org.apache.pulsar.compaction.Compactor.COMPACTION_SUBSCRIPTION;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import java.util.ArrayList;
@@ -117,6 +119,8 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
     protected final ExecutorService dispatchMessagesThread;
     private final SharedConsumerAssignor assignor;
 
+    private final boolean delayedDeliverySharedIndexEnabled;
+
     protected enum ReadType {
         Normal, Replay
     }
@@ -141,6 +145,8 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
         this.readBatchSize = serviceConfig.getDispatcherMaxReadBatchSize();
         this.initializeDispatchRateLimiterIfNeeded();
         this.assignor = new SharedConsumerAssignor(this::getNextConsumer, this::addMessageToReplay);
+        this.delayedDeliverySharedIndexEnabled =
+                topic.getBrokerService().pulsar().getConfiguration().isDelayedDeliverySharedIndexEnabled();
     }
 
     @Override
@@ -260,9 +266,15 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
             return;
         }
 
+        if (subscription.getName().equals(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)) {
+            getMessagesToReplayNow(10);
+            return;
+        }
+
         // totalAvailablePermits may be updated by other threads
         int firstAvailableConsumerPermits = getFirstAvailableConsumerPermits();
         int currentTotalAvailablePermits = Math.max(totalAvailablePermits, firstAvailableConsumerPermits);
+
         if (currentTotalAvailablePermits > 0 && firstAvailableConsumerPermits > 0) {
             Pair<Integer, Long> calculateResult = calculateToRead(currentTotalAvailablePermits);
             int messagesToRead = calculateResult.getLeft();
@@ -516,6 +528,13 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
             havePendingRead = false;
         } else {
             havePendingReplayRead = false;
+        }
+
+        if (subscription.getName().equals(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)) {
+            System.out.println("111111111111");
+            entries.forEach(Entry::release);
+            readMoreEntriesAsync();
+            return;
         }
 
         if (readBatchSize < serviceConfig.getDispatcherMaxReadBatchSize()) {
@@ -1011,19 +1030,42 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
         }
 
         synchronized (this) {
+            log.info("[{}] trackDelayedDelivery: {}:{}", this.name, ledgerId, entryId);
             if (!delayedDeliveryTracker.isPresent()) {
                 if (!msgMetadata.hasDeliverAtTime()) {
                     // No need to initialize the tracker here
                     return false;
                 }
 
-                // Initialize the tracker the first time we need to use it
-                delayedDeliveryTracker = Optional
-                        .of(topic.getBrokerService().getDelayedDeliveryTrackerFactory().newTracker(this));
+                if (delayedDeliverySharedIndexEnabled && topic.sharedDelayedMessageIndexDispatcher != null
+                        && !subscription.getName().equals(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)) {
+                    boolean delayedDelivery =
+                            topic.sharedDelayedMessageIndexDispatcher.trackDelayedDelivery(ledgerId, entryId,
+                                    msgMetadata);
+                    this.delayedDeliveryTracker =
+                            Optional.of(topic.sharedDelayedMessageIndexDispatcher.delayedDeliveryTracker.get());
+                    return delayedDelivery;
+                } else {
+                    // Initialize the tracker the first time we need to use it
+                    delayedDeliveryTracker = Optional
+                            .of(topic.getBrokerService().getDelayedDeliveryTrackerFactory().newTracker(this));
+                }
+            }
+
+            synchronized (topic.sharedDelayedMessageIndexDispatcher) {
+                PositionImpl position = PositionImpl.get(ledgerId, entryId);
+                ManagedCursor sharedDelayedIndexCursor = topic.sharedDelayedMessageIndexDispatcher.cursor;
+                PositionImpl prevReadPosition = (PositionImpl) sharedDelayedIndexCursor.getReadPosition();
+                if (prevReadPosition.compareTo(position) < 0) {
+                    sharedDelayedIndexCursor.seek(position);
+                    PersistentSubscription subscription =
+                            (PersistentSubscription) topic.sharedDelayedMessageIndexDispatcher.subscription;
+                    sharedDelayedIndexCursor.asyncMarkDelete(prevReadPosition, subscription.markDeleteCallback,
+                            sharedDelayedIndexCursor.getMarkDeletedPosition());
+                }
             }
 
             delayedDeliveryTracker.get().resetTickTime(topic.getDelayedDeliveryTickTimeMillis());
-
             long deliverAtTime = msgMetadata.hasDeliverAtTime() ? msgMetadata.getDeliverAtTime() : -1L;
             return delayedDeliveryTracker.get().addMessage(ledgerId, entryId, deliverAtTime);
         }
@@ -1032,9 +1074,67 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
     protected synchronized Set<PositionImpl> getMessagesToReplayNow(int maxMessagesToRead) {
         if (!redeliveryMessages.isEmpty()) {
             return redeliveryMessages.getMessagesToReplayNow(maxMessagesToRead);
-        } else if (delayedDeliveryTracker.isPresent() && delayedDeliveryTracker.get().hasMessageAvailable()) {
-            delayedDeliveryTracker.get().resetTickTime(topic.getDelayedDeliveryTickTimeMillis());
-            return delayedDeliveryTracker.get().getScheduledMessages(maxMessagesToRead);
+        } else if (delayedDeliveryTracker.isPresent()) {
+            // Avoid order orderless
+            if (delayedDeliverySharedIndexEnabled && topic.sharedDelayedMessageIndexDispatcher != null
+                    && !subscription.getName().equals(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)) {
+                synchronized (topic.sharedDelayedMessageIndexDispatcher) {
+                    return topic.sharedDelayedMessageIndexDispatcher.getMessagesToReplayNow(maxMessagesToRead);
+                }
+            }
+
+            if (delayedDeliveryTracker.get().hasMessageAvailable()) {
+                delayedDeliveryTracker.get().resetTickTime(topic.getDelayedDeliveryTickTimeMillis());
+                Set<PositionImpl> scheduledMessages =
+                        delayedDeliveryTracker.get().getScheduledMessages(maxMessagesToRead);
+                if (delayedDeliverySharedIndexEnabled && topic.sharedDelayedMessageIndexDispatcher != null) {
+                    topic.getSubscriptions().forEach((subscriptionName, persistentSubscription) -> {
+                        if (!(persistentSubscription.dispatcher instanceof PersistentDispatcherMultipleConsumers)) {
+                            return;
+                        }
+
+                        final PersistentDispatcherMultipleConsumers dispatcher =
+                                (PersistentDispatcherMultipleConsumers) persistentSubscription.dispatcher;
+
+                        if (subscriptionName.equals(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)
+                                || subscriptionName.equals(COMPACTION_SUBSCRIPTION)
+                                || subscriptionName.equals(subscription.getName())) {
+                            return;
+                        }
+
+                        boolean hasValidEntry = false;
+                        for (PositionImpl position : scheduledMessages) {
+                            PositionImpl readPosition =
+                                    (PositionImpl) persistentSubscription.cursor.getReadPosition();
+                            if (readPosition.compareTo(position) < 0) {
+                                return;
+                            }
+
+                            synchronized (dispatcher) {
+                                if (dispatcher.addMessageToReplay(position.getLedgerId(), position.getEntryId())) {
+                                    log.info("position: {}", position);
+                                    dispatcher.getRedeliveryTracker()
+                                            .incrementAndGetRedeliveryCount(position);
+                                    hasValidEntry = true;
+                                }
+                            }
+                        }
+                        if (hasValidEntry) {
+                            dispatcher.readMoreEntriesAsync();
+                        }
+                      });
+
+                    if (subscription.getName().equals(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)) {
+                        System.out.println(topic.sharedDelayedMessageIndexDispatcher.cursor);
+                        return Collections.emptySet();
+                    }
+                }
+                log.info("[{}] scheduledMessages: {}", this.name, scheduledMessages.size());
+
+                return scheduledMessages;
+            } else {
+                return Collections.emptySet();
+            }
         } else {
             return Collections.emptySet();
         }

@@ -76,6 +76,7 @@ import org.apache.bookkeeper.mledger.impl.PositionImpl;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.broker.PulsarServerException;
+import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.namespace.NamespaceService;
 import org.apache.pulsar.broker.resources.NamespaceResources.PartitionedTopicResources;
 import org.apache.pulsar.broker.service.AbstractReplicator;
@@ -223,6 +224,10 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
 
     // Record the last time a data message (ie: not an internal Pulsar marker) is published on the topic
     private long lastDataMessagePublishedTimestamp = 0;
+
+    public static final String SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION = "__shared_delayed_message_index";
+
+    public PersistentDispatcherMultipleConsumers sharedDelayedMessageIndexDispatcher;
 
     private static class TopicStatsHelper {
         public double averageMsgSize;
@@ -1500,6 +1505,31 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                 ? createSubscription(COMPACTION_SUBSCRIPTION, CommandSubscribe.InitialPosition.Earliest, false, null)
                         .thenCompose(__ -> CompletableFuture.completedFuture(null))
                 : CompletableFuture.completedFuture(null);
+    }
+
+    public CompletableFuture<Void> preCreateSubscriptionForSharedDelayedMessageIfNeeded() {
+        ServiceConfiguration configuration = brokerService.getPulsar().getConfiguration();
+        if (!configuration.isDelayedDeliverySharedIndexEnabled()) {
+            removeSubscription(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        CompletableFuture<Subscription> subscriptionCompletableFuture;
+        if (!subscriptions.containsKey(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION)) {
+            subscriptionCompletableFuture =
+                    createSubscription(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION, InitialPosition.Earliest,
+                            false, null);
+        } else {
+            subscriptionCompletableFuture = CompletableFuture.completedFuture(null);
+        }
+
+        return subscriptionCompletableFuture.thenRun(() -> {
+            PersistentSubscription persistentSubscription =
+                    subscriptions.get(SHARED_DELAYED_MESSAGE_INDEX_SUBSCRIPTION);
+            this.sharedDelayedMessageIndexDispatcher =
+                    new PersistentDispatcherMultipleConsumers(this,
+                            persistentSubscription.cursor, persistentSubscription);
+        });
     }
 
     CompletableFuture<Void> startReplicator(String remoteCluster) {

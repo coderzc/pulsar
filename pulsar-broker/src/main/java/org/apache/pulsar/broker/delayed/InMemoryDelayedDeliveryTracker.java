@@ -99,14 +99,14 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
     }
 
     @Override
-    public boolean addMessage(long ledgerId, long entryId, long deliverAt) {
+    public synchronized boolean addMessage(long ledgerId, long entryId, long deliverAt) {
         if (deliverAt < 0 || deliverAt <= getCutoffTime()) {
             messagesHaveFixedDelay = false;
             return false;
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] Add message {}:{} -- Delivery in {} ms ", dispatcher.getName(), ledgerId, entryId,
+        if (true) {
+            log.info("[{}] Add message {}:{} -- Delivery in {} ms ", dispatcher.getName(), ledgerId, entryId,
                     deliverAt - clock.millis());
         }
 
@@ -129,7 +129,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
      * Return true if there's at least a message that is scheduled to be delivered already.
      */
     @Override
-    public boolean hasMessageAvailable() {
+    public synchronized boolean hasMessageAvailable() {
         boolean hasMessageAvailable = !priorityQueue.isEmpty() && priorityQueue.peekN1() <= getCutoffTime();
         if (!hasMessageAvailable) {
             updateTimer();
@@ -141,7 +141,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
      * Get a set of position of messages that have already reached.
      */
     @Override
-    public Set<PositionImpl> getScheduledMessages(int maxMessages) {
+    public synchronized Set<PositionImpl> getScheduledMessages(int maxMessages) {
         int n = maxMessages;
         Set<PositionImpl> positions = new TreeSet<>();
         long cutoffTime = getCutoffTime();
@@ -160,8 +160,8 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
             --n;
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] Get scheduled messages - found {}", dispatcher.getName(), positions.size());
+        if (true) {
+            log.info("[{}] Get scheduled messages - found {}", dispatcher.getName(), positions.size());
         }
 
         if (priorityQueue.isEmpty()) {
@@ -175,7 +175,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
     }
 
     @Override
-    public void resetTickTime(long tickTime) {
+    public synchronized void resetTickTime(long tickTime) {
 
         if (this.tickTimeMillis != tickTime) {
             this.tickTimeMillis = tickTime;
@@ -183,12 +183,12 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         this.priorityQueue.clear();
     }
 
     @Override
-    public long getNumberOfDelayedMessages() {
+    public synchronized long getNumberOfDelayedMessages() {
         return priorityQueue.size();
     }
 
@@ -272,7 +272,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         priorityQueue.close();
         if (timeout != null) {
             timeout.cancel();
@@ -280,7 +280,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
     }
 
     @Override
-    public boolean shouldPauseAllDeliveries() {
+    public synchronized boolean shouldPauseAllDeliveries() {
         // Pause deliveries if we know all delays are fixed within the lookahead window
         return messagesHaveFixedDelay
                 && priorityQueue.size() >= DETECT_FIXED_DELAY_LOOKAHEAD_MESSAGES

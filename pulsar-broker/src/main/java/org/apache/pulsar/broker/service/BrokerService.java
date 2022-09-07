@@ -1484,6 +1484,8 @@ public class BrokerService implements Closeable {
                                             }
                                         })
                                         .thenCompose(__ -> persistentTopic.preCreateSubscriptionForCompactionIfNeeded())
+                                        .thenCompose(__ ->
+                                                persistentTopic.preCreateSubscriptionForSharedDelayedMessageIfNeeded())
                                         .thenCompose(__ -> persistentTopic.checkReplication())
                                         .thenCompose(v -> {
                                             // Also check dedup status
