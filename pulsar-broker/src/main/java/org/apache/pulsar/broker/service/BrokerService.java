@@ -19,15 +19,11 @@
 package org.apache.pulsar.broker.service;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.bookkeeper.mledger.util.SafeRun.safeRun;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.pulsar.common.naming.SystemTopicNames.isTransactionInternalName;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -52,6 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -277,7 +274,7 @@ public class BrokerService implements Closeable {
     private boolean preciseTopicPublishRateLimitingEnable;
     private final LongAdder pausedConnections = new LongAdder();
     private BrokerInterceptor interceptor;
-    private ImmutableMap<String, EntryFilterWithClassLoader> entryFilters;
+    private Map<String, EntryFilterWithClassLoader> entryFilters;
     private TopicFactory topicFactory;
 
     private Set<BrokerEntryMetadataInterceptor> brokerEntryMetadataInterceptors;
@@ -1042,7 +1039,9 @@ public class BrokerService implements Closeable {
     }
 
     public CompletableFuture<Void> deleteTopic(String topic, boolean forceDelete) {
+        TopicName topicName = TopicName.get(topic);
         Optional<Topic> optTopic = getTopicReference(topic);
+
         if (optTopic.isPresent()) {
             Topic t = optTopic.get();
             if (forceDelete) {
@@ -1069,9 +1068,8 @@ public class BrokerService implements Closeable {
             return t.delete();
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Topic {} is not loaded, try to delete from metadata", topic);
-        }
+        log.info("Topic {} is not loaded, try to delete from metadata", topic);
+
         // Topic is not loaded, though we still might be able to delete from metadata
         TopicName tn = TopicName.get(topic);
         if (!tn.isPersistent()) {
@@ -1080,27 +1078,28 @@ public class BrokerService implements Closeable {
         }
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-
         CompletableFuture<Void> deleteTopicAuthenticationFuture = new CompletableFuture<>();
         deleteTopicAuthenticationWithRetry(topic, deleteTopicAuthenticationFuture, 5);
+
         deleteTopicAuthenticationFuture.whenComplete((v, ex) -> {
             if (ex != null) {
                 future.completeExceptionally(ex);
                 return;
             }
-            managedLedgerFactory.asyncDelete(tn.getPersistenceNamingEncoding(), new DeleteLedgerCallback() {
-                @Override
-                public void deleteLedgerComplete(Object ctx) {
-                    future.complete(null);
-                }
+            CompletableFuture<ManagedLedgerConfig> mlConfigFuture = getManagedLedgerConfig(topicName);
+            managedLedgerFactory.asyncDelete(tn.getPersistenceNamingEncoding(),
+                    mlConfigFuture, new DeleteLedgerCallback() {
+                        @Override
+                        public void deleteLedgerComplete(Object ctx) {
+                            future.complete(null);
+                        }
 
-                @Override
-                public void deleteLedgerFailed(ManagedLedgerException exception, Object ctx) {
-                    future.completeExceptionally(exception);
-                }
-            }, null);
+                        @Override
+                        public void deleteLedgerFailed(ManagedLedgerException exception, Object ctx) {
+                            future.completeExceptionally(exception);
+                        }
+                    }, null);
         });
-
 
         return future;
     }
@@ -1604,20 +1603,20 @@ public class BrokerService implements Closeable {
                         managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyClassName(
                                 IsolatedBookieEnsemblePlacementPolicy.class);
                         if (localPolicies.isPresent() && localPolicies.get().bookieAffinityGroup != null) {
-                            Map<String, Object> properties = Maps.newHashMap();
+                            Map<String, Object> properties = new HashMap<>();
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.ISOLATION_BOOKIE_GROUPS,
                                     localPolicies.get().bookieAffinityGroup.getBookkeeperAffinityGroupPrimary());
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.SECONDARY_ISOLATION_BOOKIE_GROUPS,
                                     localPolicies.get().bookieAffinityGroup.getBookkeeperAffinityGroupSecondary());
                             managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyProperties(properties);
                         } else if (isSystemTopic(topicName)) {
-                            Map<String, Object> properties = Maps.newHashMap();
+                            Map<String, Object> properties = new HashMap<>();
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.ISOLATION_BOOKIE_GROUPS, "*");
                             properties.put(IsolatedBookieEnsemblePlacementPolicy
                                     .SECONDARY_ISOLATION_BOOKIE_GROUPS, "*");
                             managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyProperties(properties);
                         } else {
-                            Map<String, Object> properties = Maps.newHashMap();
+                            Map<String, Object> properties = new HashMap<>();
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.ISOLATION_BOOKIE_GROUPS, "");
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.SECONDARY_ISOLATION_BOOKIE_GROUPS, "");
                             managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyProperties(properties);
@@ -1626,7 +1625,7 @@ public class BrokerService implements Closeable {
                         if (localPolicies.isPresent() && localPolicies.get().bookieAffinityGroup != null) {
                             managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyClassName(
                                             IsolatedBookieEnsemblePlacementPolicy.class);
-                            Map<String, Object> properties = Maps.newHashMap();
+                            Map<String, Object> properties = new HashMap<>();
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.ISOLATION_BOOKIE_GROUPS,
                                     localPolicies.get().bookieAffinityGroup.getBookkeeperAffinityGroupPrimary());
                             properties.put(IsolatedBookieEnsemblePlacementPolicy.SECONDARY_ISOLATION_BOOKIE_GROUPS,
@@ -1744,7 +1743,7 @@ public class BrokerService implements Closeable {
     }
 
     public void refreshTopicToStatsMaps(NamespaceBundle oldBundle) {
-        checkNotNull(oldBundle);
+        Objects.requireNonNull(oldBundle);
         try {
             // retrieve all topics under existing old bundle
             List<Topic> topics = getAllTopicsFromNamespaceBundle(oldBundle.getNamespaceObject().toString(),
@@ -1974,7 +1973,7 @@ public class BrokerService implements Closeable {
      */
     private CompletableFuture<Integer> unloadServiceUnit(NamespaceBundle serviceUnit,
                                                          boolean closeWithoutWaitingClientDisconnect) {
-        List<CompletableFuture<Void>> closeFutures = Lists.newArrayList();
+        List<CompletableFuture<Void>> closeFutures = new ArrayList<>();
         topics.forEach((name, topicFuture) -> {
             TopicName topicName = TopicName.get(name);
             if (serviceUnit.includes(topicName)) {
@@ -2677,7 +2676,7 @@ public class BrokerService implements Closeable {
             // create dynamic-config if not exist.
             if (!configCache.isPresent()) {
                 pulsar().getPulsarResources().getDynamicConfigResources()
-                        .setDynamicConfigurationWithCreate(n -> Maps.newHashMap());
+                        .setDynamicConfigurationWithCreate(n -> new HashMap<>());
             }
         } catch (Exception e) {
             log.warn("Failed to read dynamic broker configuration", e);
@@ -2698,7 +2697,7 @@ public class BrokerService implements Closeable {
             // create dynamic-config if not exist.
             if (!configCache.isPresent()) {
                 pulsar().getPulsarResources().getDynamicConfigResources()
-                        .setDynamicConfigurationWithCreate(n -> Maps.newHashMap());
+                        .setDynamicConfigurationWithCreate(n -> new HashMap<>());
             }
         } catch (Exception e) {
             log.warn("Failed to read dynamic broker configuration", e);
@@ -2736,7 +2735,7 @@ public class BrokerService implements Closeable {
     }
 
     public Map<String, String> getRuntimeConfiguration() {
-        Map<String, String> configMap = Maps.newHashMap();
+        Map<String, String> configMap = new HashMap<>();
         ConcurrentOpenHashMap<String, Object> runtimeConfigurationMap = getRuntimeConfigurationMap();
         runtimeConfigurationMap.forEach((key, value) -> {
             configMap.put(key, String.valueOf(value));
