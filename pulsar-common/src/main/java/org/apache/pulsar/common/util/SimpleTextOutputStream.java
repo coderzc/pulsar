@@ -19,6 +19,7 @@
 package org.apache.pulsar.common.util;
 
 import io.netty.buffer.ByteBuf;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Format strings and numbers into a ByteBuf without any memory allocation.
@@ -51,10 +52,7 @@ public class SimpleTextOutputStream {
         if (s == null) {
             return this;
         }
-        int len = s.length();
-        for (int i = 0; i < len; i++) {
-            buffer.writeByte((byte) s.charAt(i));
-        }
+        buffer.writeCharSequence(s, StandardCharsets.UTF_8);
 
         return this;
     }

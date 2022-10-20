@@ -19,15 +19,12 @@
 package org.apache.pulsar.utils;
 
 import static org.testng.Assert.assertEquals;
-
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
-
 import org.apache.pulsar.common.util.SimpleTextOutputStream;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 @Test(groups = "utils")
 public class SimpleTextOutputStreamTest {
@@ -111,6 +108,12 @@ public class SimpleTextOutputStreamTest {
     public void testString() {
         stream.writeEncoded("�\b`~�ýý8ýH\\abcd\"");
         assertEquals(str(), "\\ufffd\\u0008`~\\ufffd\\u00fd\\u00fd8\\u00fdH\\\\abcd\\\"");
+    }
+
+    @Test
+    public void testString2() {
+        stream.write("pri_bg_spot_¬mwh_cet_h_a");
+        assertEquals(str(), "pri_bg_spot_¬mwh_cet_h_a");
     }
 
     public String str() {
