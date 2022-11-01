@@ -440,7 +440,7 @@ public class ZKMetadataStore extends AbstractMetadataStore implements MetadataSt
                 if (chrootZk.exists(chrootPath, false) == null) {
                     ZkUtils.createFullPathOptimistic(chrootZk, chrootPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE,
                             CreateMode.PERSISTENT);
-                    log.info("Created zookeeper chroot path {} successfully", chrootPath);
+                    log.info("Created zookeeper chroot path {}  successfully", chrootPath);
                 }
             } catch (Exception e) {
                 return FutureUtil.failedFuture(e);
