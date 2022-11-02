@@ -107,8 +107,8 @@ public class ZKMetadataStore extends AbstractMetadataStore implements MetadataSt
                         future.complete(Optional.empty());
                         // if z-node does not exist then discards cache,
                         // because we can't be received NodeCreated event
-//                        metadataCaches.forEach(c -> c.invalidate(path));
-//                        receivedNotification(new Notification(NotificationType.Invalidate, path));
+                        metadataCaches.forEach(c -> c.invalidate(path));
+                        receivedNotification(new Notification(NotificationType.Invalidate, path));
                     } else if (code == Code.CONNECTIONLOSS) {
                         // There is the chance that we caused a connection reset by sending or requesting a batch
                         // that passed the max ZK limit. Retry with the individual operations
@@ -145,8 +145,8 @@ public class ZKMetadataStore extends AbstractMetadataStore implements MetadataSt
                         future.complete(Collections.emptyList());
                         // if z-node does not exist then discards cache,
                         // because we can't be received NodeCreated event
-//                        childrenCache.synchronous().invalidate(path);
-//                        receivedNotification(new Notification(NotificationType.Invalidate, path));
+                        childrenCache.synchronous().invalidate(path);
+                        receivedNotification(new Notification(NotificationType.Invalidate, path));
                     } else if (code == Code.CONNECTIONLOSS) {
                         // There is the chance that we caused a connection reset by sending or requesting a batch
                         // that passed the max ZK limit. Retry with the individual operations
@@ -186,7 +186,7 @@ public class ZKMetadataStore extends AbstractMetadataStore implements MetadataSt
                                         log.warn("Remove watcher for non-existing znode failed. rc: {}, path: {}", code0, path);
                                     }
                                 }, null);
-//                        existsCache.synchronous().invalidate(path);
+                        existsCache.synchronous().invalidate(path);
                     } else if (code == Code.CONNECTIONLOSS) {
                         // There is the chance that we caused a connection reset by sending or requesting a batch
                         // that passed the max ZK limit. Retry with the individual operations
