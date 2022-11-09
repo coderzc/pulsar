@@ -136,6 +136,7 @@
                   <include>org.asynchttpclient:*</include>
                   <include>io.netty:netty-codec-http</include>
                   <include>io.netty:netty-transport-native-epoll</include>
+                  <include>io.netty.incubator:*</include>
                   <include>org.reactivestreams:reactive-streams</include>
                   <include>com.typesafe.netty:netty-reactive-streams</include>
                   <include>org.javassist:javassist</include>
