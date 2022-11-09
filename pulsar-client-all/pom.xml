@@ -158,6 +158,7 @@
                   <include>io.netty:netty</include>
                   <include>io.netty:netty-all</include>
                   <include>io.netty:netty-tcnative-boringssl-static</include>
+                  <include>io.netty.incubator:netty-incubator-transport-native-io_uring</include>
                   <include>org.eclipse.jetty:*</include>
                   <include>com.yahoo.datasketches:*</include>
                   <include>commons-*:*</include>
