@@ -1445,7 +1445,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 @Override
                 public void operationComplete(Void v, Stat stat) {
                     if (log.isDebugEnabled()) {
-                        log.debug("[{}] Updating of ledgers list after create complete. version={}", name, stat);
+                        log.debug("[{}] Updating  of ledgers list after create complete. version={}", name, stat);
                     }
                     ledgersStat = stat;
                     synchronized (ManagedLedgerImpl.this) {
