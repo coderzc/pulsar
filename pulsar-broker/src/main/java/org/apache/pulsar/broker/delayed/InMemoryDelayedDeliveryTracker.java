@@ -166,7 +166,7 @@ public class InMemoryDelayedDeliveryTracker implements DelayedDeliveryTracker, T
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("[{}] Get scheduled  messages - found {}", dispatcher.getName(), positions.size());
+            log.debug("[{}] Get scheduled   messages - found {}", dispatcher.getName(), positions.size());
         }
 
         if (priorityQueue.isEmpty()) {
