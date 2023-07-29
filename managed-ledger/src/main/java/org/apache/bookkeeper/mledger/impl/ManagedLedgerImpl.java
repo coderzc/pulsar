@@ -2567,7 +2567,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     private boolean isLedgerRetentionOverSizeQuota(long sizeToDelete) {
         // Handle the -1 size limit as "infinite" size quota
         return config.getRetentionSizeInMB() >= 0
-                && TOTAL_SIZE_UPDATER.get(this) - sizeToDelete >= config.getRetentionSizeInMB() * MegaByte;
+                && TOTAL_SIZE_UPDATER.get(this) - sizeToDelete > config.getRetentionSizeInMB() * MegaByte;
     }
 
     boolean isOffloadedNeedsDelete(OffloadContext offload, Optional<OffloadPolicies> offloadPolicies) {
@@ -2667,7 +2667,6 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                     continue;
                 }
 
-                totalSizeToDelete += ls.getSize();
                 boolean overRetentionQuota = isLedgerRetentionOverSizeQuota(totalSizeToDelete);
                 boolean expired = hasLedgerRetentionExpired(ls.getTimestamp());
                 if (log.isDebugEnabled()) {
@@ -2685,6 +2684,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                                 name, ls.getLedgerId(), expired, ls.getTimestamp(), overRetentionQuota, ls.getSize());
                     }
                     ledgersToDelete.add(ls);
+                    totalSizeToDelete += ls.getSize();
                 } else {
                     if (ls.getLedgerId() < getTheSlowestNonDurationReadPosition().getLedgerId()) {
                         // once retention constraint has been met, skip check

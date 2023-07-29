@@ -2390,7 +2390,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
     @Test
     public void testRetentionSize() throws Exception {
         final int retentionSizeInMB = 5;
-        final int totalMessage = 10;
+        final int totalMessage = 11;
 
         // message size is 1MB
         final int messageSize = 1048576;
@@ -2402,7 +2402,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         ManagedLedgerFactory factory = new ManagedLedgerFactoryImpl(metadataStore, bkc);
         ManagedLedgerConfig config = new ManagedLedgerConfig();
         config.setRetentionSizeInMB(retentionSizeInMB);
-        config.setMaxEntriesPerLedger(1);
+        config.setMaxEntriesPerLedger(2);
         config.setRetentionTime(1, TimeUnit.HOURS);
 
 
@@ -2413,7 +2413,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
             position = ml.addEntry(message);
         }
         // all ledgers are not delete yet since no entry has been acked for c1
-        assertEquals(ml.getLedgersInfoAsList().size(), totalMessage);
+        assertEquals(ml.getLedgersInfoAsList().size(), Math.ceil(totalMessage / 2.0));
 
         List<Entry> entryList = c1.readEntries(totalMessage);
         if (null != position) {
@@ -2426,7 +2426,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
 
         Awaitility.await().untilAsserted(() -> {
             assertTrue(ml.getTotalSize() <= retentionSizeInMB * 1024 * 1024);
-            assertEquals(ml.getLedgersInfoAsList().size(), 5);
+            assertEquals(ml.getLedgersInfoAsList().size(), 3);
         });
     }
 
