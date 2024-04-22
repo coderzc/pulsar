@@ -162,7 +162,7 @@ public class PulsarBrokerStarter {
             // init broker config
             if (isBlank(starterArguments.brokerConfigFile)) {
                 jcommander.usage();
-                throw new IllegalArgumentException("Need to specify a configuration file for broker");
+                throw new IllegalArgumentException("Need to specify a configuration file for broker.");
             } else {
                 final String filepath = Path.of(starterArguments.brokerConfigFile)
                         .toAbsolutePath().normalize().toString();
