@@ -34,6 +34,8 @@ import picocli.CommandLine.Option;
 @Slf4j
 public class PulsarStandaloneStarter extends PulsarStandalone {
 
+    // test 3.3 ci
+
     private static final String PULSAR_CONFIG_FILE = "pulsar.config.file";
 
     @Option(names = {"-g", "--generate-docs"}, description = "Generate docs")
