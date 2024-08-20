@@ -80,6 +80,18 @@ public interface ConsumerInterceptor<T> extends AutoCloseable {
     Message<T> beforeConsume(Consumer<T> consumer, Message<T> message);
 
     /**
+     * This interface is invoked when a message has just reached the client through the socket interface.
+     *
+     * @param consumer the consumer which contains the interceptor
+     * @param message the message to be consumed by the client.
+     * @return message that is either modified by the interceptor or same message
+     *         passed into the method.
+     */
+    default Message<T> beforeMessageReceive(Consumer<T> consumer, Message<T> message) {
+        return message;
+    }
+
+    /**
      * This is called consumer sends the acknowledgment to the broker.
      *
      * <p>Any exception thrown by this method will be ignored by the caller.
