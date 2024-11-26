@@ -24,7 +24,7 @@
   <parent>
     <artifactId>pulsar-io</artifactId>
     <groupId>io.streamnative</groupId>
-    <version>3.0.7.3</version>
+    <version>3.0.7.3-shade</version>
   </parent>
   <properties>
     <alluxio.version>2.9.3</alluxio.version>

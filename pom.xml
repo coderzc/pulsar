@@ -29,7 +29,7 @@
   </parent>
   <groupId>io.streamnative</groupId>
   <artifactId>pulsar</artifactId>
-  <version>3.0.7.3</version>
+  <version>3.0.7.3-shade</version>
   <name>Pulsar</name>
   <description>Pulsar is a distributed pub-sub messaging platform with a very
 flexible messaging model and an intuitive client API.</description>
@@ -80,7 +80,7 @@ flexible messaging model and an intuitive client API.</description>
     <excludedGroups>quarantine,flaky</excludedGroups>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <project.build.outputTimestamp>2024-11-18T03:11:41Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2024-11-26T09:03:08Z</project.build.outputTimestamp>
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <!-- By default build for local Docker platform.
          To create multi-arch image, pass -Ddocker.platforms=linux/arm64,linux/amd64
