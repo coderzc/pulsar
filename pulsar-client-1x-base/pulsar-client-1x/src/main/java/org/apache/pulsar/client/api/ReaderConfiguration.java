@@ -55,15 +55,15 @@ public class ReaderConfiguration implements Serializable {
     public ReaderConfiguration setReaderListener(ReaderListener<byte[]> readerListener) {
         Objects.requireNonNull(readerListener);
         this.readerListener = readerListener;
-        conf.setReaderListener(new org.apache.pulsar.shade.client.api.v2.ReaderListener<byte[]>() {
+        conf.setReaderListener(new com.iterable.shade.client.api.v2.ReaderListener<byte[]>() {
 
             @Override
-            public void received(org.apache.pulsar.shade.client.api.v2.Reader<byte[]> v2Reader, Message<byte[]> msg) {
+            public void received(com.iterable.shade.client.api.v2.Reader<byte[]> v2Reader, Message<byte[]> msg) {
                 readerListener.received(new ReaderV1Impl(v2Reader), msg);
             }
 
             @Override
-            public void reachedEndOfTopic(org.apache.pulsar.shade.client.api.v2.Reader<byte[]> reader) {
+            public void reachedEndOfTopic(com.iterable.shade.client.api.v2.Reader<byte[]> reader) {
                 readerListener.reachedEndOfTopic(new ReaderV1Impl(reader));
             }
         });
