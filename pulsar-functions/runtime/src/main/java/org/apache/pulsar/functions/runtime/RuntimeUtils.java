@@ -352,7 +352,7 @@ public class RuntimeUtils {
             // Needed for optimized Netty direct byte buffer support
             args.add("-Dio.netty.tryReflectionSetAccessible=true");
             // Handle possible shaded Netty versions
-            args.add("-Dorg.apache.pulsar.shade.io.netty.tryReflectionSetAccessible=true");
+            args.add("-Dcom.iterable.shade.io.netty.tryReflectionSetAccessible=true");
             args.add("-Dio.grpc.netty.shaded.io.netty.tryReflectionSetAccessible=true");
 
             if (SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_11)) {

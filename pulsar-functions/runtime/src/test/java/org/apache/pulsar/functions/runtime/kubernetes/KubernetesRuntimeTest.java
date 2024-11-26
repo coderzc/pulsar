@@ -478,7 +478,7 @@ public class KubernetesRuntimeTest {
                 + "-Dpulsar.function.log.dir=" + logDirectory + "/" + FunctionCommon.getFullyQualifiedName(config.getFunctionDetails())
                 + " -Dpulsar.function.log.file=" + config.getFunctionDetails().getName() + "-$SHARD_ID"
                 + " -Dio.netty.tryReflectionSetAccessible=true"
-                + " -Dorg.apache.pulsar.shade.io.netty.tryReflectionSetAccessible=true"
+                + " -Dcom.iterable.shade.io.netty.tryReflectionSetAccessible=true"
                 + " -Dio.grpc.netty.shaded.io.netty.tryReflectionSetAccessible=true"
                 + " --add-opens java.base/java.nio=ALL-UNNAMED"
                 + " --add-opens java.base/jdk.internal.misc=ALL-UNNAMED"

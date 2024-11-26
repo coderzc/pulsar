@@ -328,7 +328,7 @@ public class ProcessRuntimeTest {
                 + "-Dpulsar.function.log.dir=" + logDirectory + "/functions/" + FunctionCommon.getFullyQualifiedName(config.getFunctionDetails())
                 + " -Dpulsar.function.log.file=" + config.getFunctionDetails().getName() + "-" + config.getInstanceId()
                 + " -Dio.netty.tryReflectionSetAccessible=true"
-                + " -Dorg.apache.pulsar.shade.io.netty.tryReflectionSetAccessible=true"
+                + " -Dcom.iterable.shade.io.netty.tryReflectionSetAccessible=true"
                 + " -Dio.grpc.netty.shaded.io.netty.tryReflectionSetAccessible=true"
                 + " --add-opens java.base/java.nio=ALL-UNNAMED"
                 + " --add-opens java.base/jdk.internal.misc=ALL-UNNAMED"

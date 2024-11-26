@@ -263,7 +263,7 @@ public class ObjectMapperFactory {
         try {
             // We look for LoadManagerReport first, then add deserializer to the module
             // With shaded client, org.apache.pulsar.policies is relocated to
-            // org.apache.pulsar.shade.org.apache.pulsar.policies
+            // com.iterable.shade.org.apache.pulsar.policies
             ClassUtils.getClass("org.apache.pulsar.policies.data.loadbalancer.LoadManagerReport");
             module.addDeserializer(LoadManagerReport.class, new LoadReportDeserializer());
         } catch (ClassNotFoundException e) {
