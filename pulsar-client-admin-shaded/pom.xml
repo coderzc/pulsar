@@ -22,7 +22,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.apache.pulsar</groupId>
+    <groupId>io.streamnative</groupId>
     <artifactId>pulsar</artifactId>
     <version>3.0.7.5</version>
     <relativePath>..</relativePath>
@@ -102,8 +102,8 @@
               <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
               <artifactSet>
                 <includes>
-                  <include>org.apache.pulsar:pulsar-client-original</include>
-                  <include>org.apache.pulsar:pulsar-client-admin-original</include>
+                  <include>io.streamnative:pulsar-client-original</include>
+                  <include>io.streamnative:pulsar-client-admin-original</include>
                   <include>org.apache.commons:commons-lang3</include>
                   <include>commons-codec:commons-codec</include>
                   <include>commons-collections:commons-collections</include>
@@ -117,7 +117,7 @@
                   <include>com.fasterxml.jackson.*:*</include>
                   <include>io.netty:*</include>
                   <include>io.netty.incubator:*</include>
-                  <include>org.apache.pulsar:pulsar-common</include>
+                  <include>io.streamnative:pulsar-common</include>
                   <include>io.streamnative:*</include>
                   <include>com.yahoo.datasketches:sketches-core</include>
                   <include>org.glassfish.jersey*:*</include>
@@ -139,7 +139,7 @@
                   <include>org.yaml:snakeyaml</include>
                   <include>io.swagger:*</include>
                   <!-- Issue #6834, Since Netty ByteBuf shaded, we need also shade this module -->
-                  <include>org.apache.pulsar:pulsar-client-messagecrypto-bc</include>
+                  <include>io.streamnative:pulsar-client-messagecrypto-bc</include>
                 </includes>
                 <excludes>
                   <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
@@ -148,7 +148,7 @@
               </artifactSet>
               <filters>
                 <filter>
-                  <artifact>org.apache.pulsar:pulsar-client-original</artifact>
+                  <artifact>io.streamnative:pulsar-client-original</artifact>
                   <includes>
                     <include>**</include>
                   </includes>
@@ -158,7 +158,7 @@
                   </excludes>
                 </filter>
                 <filter>
-                  <artifact>org.apache.pulsar:pulsar-client-admin-original</artifact>
+                  <artifact>io.streamnative:pulsar-client-admin-original</artifact>
                   <includes>
                     <include>**</include>
                   </includes>
@@ -306,6 +306,29 @@
           </execution>
         </executions>
       </plugin>
-    </plugins>
+    <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-jar-plugin</artifactId>
+    <version>3.2.0</version>
+    <executions>
+        <execution>
+            <id>default-jar</id>
+            <phase>package</phase>
+            <goals>
+                <goal>jar</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>javadoc-jar</id>
+            <phase>package</phase>
+            <goals>
+                <goal>jar</goal>
+            </goals>
+            <configuration>
+                <classifier>javadoc</classifier>
+            </configuration>
+        </execution>
+    </executions>
+</plugin></plugins>
   </build>
 </project>
