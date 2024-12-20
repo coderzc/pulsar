@@ -291,6 +291,24 @@
                   <pattern>org.apache.bookkeeper</pattern>
                   <shadedPattern>com.iterable.shade.org.apache.bookkeeper</shadedPattern>
                 </relocation>
+                <relocation>
+                  <pattern>com.scurrilous</pattern>
+                  <shadedPattern>com.iterable.shade.com.scurrilous</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.pulsar</pattern>
+                  <shadedPattern>com.iterable.shade.org.apache.pulsar</shadedPattern>
+                  <!-- exclude pulsar client API package-->
+                  <excludes>
+                    <exclude>org.apache.pulsar.common.api.AuthData</exclude>
+                    <exclude>org.apache.pulsar.common.api.EncryptionContext</exclude>
+                    <exclude>org.apache.pulsar.common.api.EncryptionContext$EncryptionKey</exclude>
+                    <exclude>org.apache.pulsar.common.schema.*</exclude>
+                    <exclude>org.apache.pulsar.common.classification.*</exclude>
+                    <exclude>org.apache.pulsar.client.api.**</exclude>
+                    <exclude>org.apache.pulsar.client.internal.**</exclude>
+                  </excludes>
+                </relocation>
                 <!-- Rename Netty native libraries to include the shaded prefix -->
                 <relocation>
                   <pattern>(META-INF/native/(lib)?)(netty.+\.(so|jnilib|dll))$</pattern>
