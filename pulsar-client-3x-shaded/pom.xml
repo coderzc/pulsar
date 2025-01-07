@@ -27,19 +27,23 @@
     <version>3.0.7.5</version>
     <relativePath>..</relativePath>
   </parent>
-  <artifactId>pulsar-client-admin</artifactId>
-  <name>Pulsar Client Admin</name>
+  <artifactId>pulsar-client-3x-shaded</artifactId>
+  <name>Shaded Pulsar Client Java</name>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>pulsar-client-admin-original</artifactId>
+      <artifactId>pulsar-client-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>pulsar-client-original</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>pulsar-client-messagecrypto-bc</artifactId>
-      <version>${project.parent.version}</version>
-      <optional>true</optional>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
   <build>
@@ -56,6 +60,15 @@
             </goals>
             <configuration>
               <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>pulsar-client-original</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <includes>**/ProtobufSchema.class</includes>
+                  <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                </artifactItem>
                 <artifactItem>
                   <groupId>org.asynchttpclient</groupId>
                   <artifactId>async-http-client</artifactId>
@@ -89,6 +102,7 @@
         </executions>
       </plugin>
       <plugin>
+        <!-- Shade all the dependencies to avoid conflicts -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
@@ -100,65 +114,56 @@
             <configuration>
               <createDependencyReducedPom>true</createDependencyReducedPom>
               <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+              <minimizeJar>false</minimizeJar>
               <artifactSet>
                 <includes>
                   <include>io.streamnative:pulsar-client-original</include>
-                  <include>io.streamnative:pulsar-client-admin-original</include>
+                  <include>io.streamnative:*</include>
                   <include>org.apache.commons:commons-lang3</include>
                   <include>commons-codec:commons-codec</include>
                   <include>commons-collections:commons-collections</include>
                   <include>org.asynchttpclient:*</include>
+                  <include>io.netty:netty-codec-http</include>
+                  <include>io.netty:netty-transport-native-epoll</include>
                   <include>org.reactivestreams:reactive-streams</include>
                   <include>com.typesafe.netty:netty-reactive-streams</include>
                   <include>org.javassist:javassist</include>
-                  <include>com.google.guava:guava</include>
+                  <include>com.google.guava:*</include>
+                  <include>org.checkerframework:*</include>
+                  <include>com.google.code.findbugs:*</include>
+                  <include>com.google.errorprone:*</include>
+                  <include>com.google.j2objc:*</include>
                   <include>com.google.code.gson:gson</include>
                   <include>com.spotify:completable-futures</include>
                   <include>com.fasterxml.jackson.*:*</include>
                   <include>io.netty:*</include>
                   <include>io.netty.incubator:*</include>
-                  <include>io.streamnative:pulsar-common</include>
-                  <include>io.streamnative:*</include>
-                  <include>com.yahoo.datasketches:sketches-core</include>
-                  <include>org.glassfish.jersey*:*</include>
-                  <include>javax.ws.rs:*</include>
-                  <include>javax.xml.bind:jaxb-api</include>
-                  <include>jakarta.annotation:*</include>
-                  <include>org.glassfish.hk2*:*</include>
-                  <include>io.grpc:*</include>
                   <include>io.perfmark:*</include>
-                  <include>com.yahoo.datasketches:*</include>
-                  <include>com.squareup.*:*</include>
-                  <include>com.google.*:*</include>
-                  <include>commons-*:*</include>
                   <include>org.eclipse.jetty:*</include>
-                  <include>com.google.auth:*</include>
-                  <include>org.jvnet.mimepull:*</include>
-                  <include>io.opencensus:*</include>
+                  <include>com.yahoo.datasketches:*</include>
+                  <include>commons-*:*</include>
+                  <include>io.swagger:*</include>
+                  <include>io.airlift:*</include>
+                  <include>io.streamnative:pulsar-common</include>
+                  <include>com.yahoo.datasketches:sketches-core</include>
                   <include>org.objenesis:*</include>
                   <include>org.yaml:snakeyaml</include>
-                  <include>io.swagger:*</include>
+                  <include>org.apache.avro:*</include>
+                  <!-- Avro transitive dependencies-->
+                  <include>com.thoughtworks.paranamer:paranamer</include>
+                  <include>org.apache.commons:commons-compress</include>
+                  <include>org.tukaani:xz</include>
                   <!-- Issue #6834, Since Netty ByteBuf shaded, we need also shade this module -->
                   <include>io.streamnative:pulsar-client-messagecrypto-bc</include>
                 </includes>
                 <excludes>
                   <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
-                  <exclude>com.google.protobuf:protobuf-java</exclude>
+                  <exclude>io.streamnative:pulsar-client-api</exclude>
                 </excludes>
               </artifactSet>
               <filters>
                 <filter>
                   <artifact>io.streamnative:pulsar-client-original</artifact>
-                  <includes>
-                    <include>**</include>
-                  </includes>
-                  <excludes>
-                    <!-- bouncycastle jars could not be shaded, or the signatures will be wrong-->
-                    <exclude>org/bouncycastle/**</exclude>
-                  </excludes>
-                </filter>
-                <filter>
-                  <artifact>io.streamnative:pulsar-client-admin-original</artifact>
                   <includes>
                     <include>**</include>
                   </includes>
@@ -176,6 +181,10 @@
                 <relocation>
                   <pattern>org.apache.commons</pattern>
                   <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.apache.commons</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>io.airlift</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.io.airlift</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.google</pattern>
@@ -199,81 +208,45 @@
                   <pattern>io.netty</pattern>
                   <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.io.netty</shadedPattern>
                 </relocation>
-<!--                <relocation>-->
-<!--                  <pattern>org.apache.pulsar.policies</pattern>-->
-<!--                  <shadedPattern>org.apache.pulsar.v3_0_7_5.policies</shadedPattern>-->
-<!--                </relocation>-->
-<!--                <relocation>-->
-<!--                  <pattern>org.apache.pulsar.checksum</pattern>-->
-<!--                  <shadedPattern>org.apache.pulsar.v3_0_7_5.checksum</shadedPattern>-->
-<!--                </relocation>-->
                 <relocation>
-                  <pattern>com.yahoo</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.yahoo</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.typesafe</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.typesafe</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.glassfish</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.glassfish</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>javax.ws</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.javax.ws</shadedPattern>
+                  <pattern>org.checkerframework</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.checkerframework</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.annotation</pattern>
                   <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.javax.annotation</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>javax.xml.bind</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.javax.xml.bind</shadedPattern>
+                  <pattern>io.swagger</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.io.swagger</shadedPattern>
+                </relocation>
+<!--                <relocation>-->
+<!--                  <pattern>org.apache.pulsar.policies</pattern>-->
+<!--                  <shadedPattern>org.apache.pulsar.v3_0_7_5.policies</shadedPattern>-->
+<!--                </relocation>-->
+                <relocation>
+                  <pattern>com.yahoo.datasketches</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.yahoo.datasketches</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>jersey</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.jersey</shadedPattern>
+                  <pattern>com.yahoo.sketches</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.yahoo.sketches</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>org.jvnet</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.jvnet</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.aopalliance</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.aopalliance</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>javassist</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.javassist</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>javax.inject</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.javax.inject</shadedPattern>
+                  <pattern>org.eclipse.jetty</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.eclipse</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.reactivestreams</pattern>
                   <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.reactivestreams</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>io.grpc</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.io.grpc</shadedPattern>
+                  <pattern>com.typesafe</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.typesafe</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>okio</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.okio</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.squareup</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.squareup</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>io.opencensus</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.io.opencensus</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.eclipse.jetty</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.eclipse.jetty</shadedPattern>
+                  <pattern>com.yahoo.memory</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.yahoo.memory</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.objenesis</pattern>
@@ -284,8 +257,37 @@
                   <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.yaml</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>io.swagger</pattern>
-                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.io.swagger</shadedPattern>
+                  <pattern>org.apache.avro</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.apache.avro</shadedPattern>
+                  <excludes>
+                    <exclude>org.apache.avro.reflect.AvroAlias</exclude>
+                    <exclude>org.apache.avro.reflect.AvroDefault</exclude>
+                    <exclude>org.apache.avro.reflect.AvroEncode</exclude>
+                    <exclude>org.apache.avro.reflect.AvroIgnore</exclude>
+                    <exclude>org.apache.avro.reflect.AvroMeta</exclude>
+                    <exclude>org.apache.avro.reflect.AvroName</exclude>
+                    <exclude>org.apache.avro.reflect.AvroSchema</exclude>
+                    <exclude>org.apache.avro.reflect.Nullable</exclude>
+                    <exclude>org.apache.avro.reflect.Stringable</exclude>
+                    <exclude>org.apache.avro.reflect.Union</exclude>
+                  </excludes>
+                </relocation>
+                <!--Avro transitive dependencies-->
+                <relocation>
+                  <pattern>org.codehaus.jackson</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.codehaus.jackson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.thoughtworks.paranamer</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.com.thoughtworks.paranamer</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.commons</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.apache.commons</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.tukaani</pattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5.shade.org.tukaani</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.apache.bookkeeper</pattern>
@@ -309,6 +311,7 @@
                     <exclude>org.apache.pulsar.client.internal.**</exclude>
                   </excludes>
                 </relocation>
+
                 <!-- Rename Netty native libraries to include the shaded prefix -->
                 <relocation>
                   <pattern>(META-INF/native/(lib)?)(netty.+\.(so|jnilib|dll))$</pattern>
@@ -321,6 +324,19 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.PluginXmlResourceTransformer"/>
               </transformers>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>spotbugs</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

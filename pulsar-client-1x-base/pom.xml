@@ -31,7 +31,6 @@
   <name>Pulsar Client 1.x Compatibility Base</name>
   <packaging>pom</packaging>
   <modules>
-    <module>pulsar-client-3x-shaded</module>
     <module>pulsar-client-2x-shaded</module>
     <module>pulsar-client-1x</module>
   </modules>
