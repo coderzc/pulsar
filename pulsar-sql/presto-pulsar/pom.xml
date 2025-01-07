@@ -179,23 +179,23 @@
               <relocations>
                 <relocation>
                   <pattern>org.glassfish</pattern>
-                  <shadedPattern>com.iterable.shade.org.glassfish</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.glassfish</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.ws</pattern>
-                  <shadedPattern>com.iterable.shade.javax.ws</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javax.ws</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.annotation</pattern>
-                  <shadedPattern>com.iterable.shade.javax.annotation</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javax.annotation</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>jersey</pattern>
-                  <shadedPattern>com.iterable.shade.jersey</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.jersey</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.eclipse.jetty</pattern>
-                  <shadedPattern>com.iterable.shade.org.eclipse.jetty</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.eclipse.jetty</shadedPattern>
                 </relocation>
               </relocations>
               <transformers>

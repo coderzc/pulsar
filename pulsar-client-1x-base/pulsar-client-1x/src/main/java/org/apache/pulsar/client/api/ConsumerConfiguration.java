@@ -116,15 +116,16 @@ public class ConsumerConfiguration implements Serializable {
     public ConsumerConfiguration setMessageListener(MessageListener<byte[]> messageListener) {
         Objects.requireNonNull(messageListener);
         this.messageListener = messageListener;
-        conf.setMessageListener(new com.iterable.shade.client.api.v2.MessageListener<byte[]>() {
+        conf.setMessageListener(new org.apache.pulsar.client.api.v2.MessageListener<byte[]>() {
 
             @Override
-            public void received(com.iterable.shade.client.api.v2.Consumer<byte[]> consumer, Message<byte[]> msg) {
+            public void received(org.apache.pulsar.client.api.v2.Consumer<byte[]> consumer,
+                                 Message<byte[]> msg) {
                 messageListener.received(new ConsumerV1Impl(consumer), msg);
             }
 
             @Override
-            public void reachedEndOfTopic(com.iterable.shade.client.api.v2.Consumer<byte[]> consumer) {
+            public void reachedEndOfTopic(com.apache.pulsar.shade.client.api.v2.Consumer<byte[]> consumer) {
                 messageListener.reachedEndOfTopic(new ConsumerV1Impl(consumer));
             }
         });

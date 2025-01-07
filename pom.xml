@@ -80,7 +80,7 @@ flexible messaging model and an intuitive client API.</description>
     <excludedGroups>quarantine,flaky</excludedGroups>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <project.build.outputTimestamp>2024-11-29T01:37:40Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2024-12-23T02:49:58Z</project.build.outputTimestamp>
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <!-- By default build for local Docker platform.
          To create multi-arch image, pass -Ddocker.platforms=linux/arm64,linux/amd64

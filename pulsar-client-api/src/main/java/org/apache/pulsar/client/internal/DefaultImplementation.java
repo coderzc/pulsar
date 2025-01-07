@@ -18,9 +18,6 @@
  */
 package org.apache.pulsar.client.internal;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * This class loads the implementation for {@link PulsarClientImplementationBinding}
  * and allows you to decouple the API from the actual implementation.
@@ -28,28 +25,26 @@ import java.util.concurrent.ConcurrentHashMap;
  * it is not meant to be used by client applications.</b>
  */
 public class DefaultImplementation {
-    private static final String DEFAULT_IMPLEMENTATION =
-            "org.apache.pulsar.client.impl.PulsarClientImplementationBindingImpl";
-    private static final Map<String, PulsarClientImplementationBinding> IMPLEMENTATIONS =
-            new ConcurrentHashMap<>();
+    private static final PulsarClientImplementationBinding IMPLEMENTATION;
+    static {
+        PulsarClientImplementationBinding impl;
+        try {
+            String clientImplClassName = System.getProperty("pulsar.client.implementation.class",
+                    "org.apache.pulsar.client.impl.PulsarClientImplementationBindingImpl");
+            impl = (PulsarClientImplementationBinding) ReflectionUtils
+                    .newClassInstance(clientImplClassName)
+                    .getConstructor().newInstance();
+        } catch (Throwable error) {
+            throw new RuntimeException("Cannot load Pulsar Client Implementation: " + error, error);
+        }
+        IMPLEMENTATION = impl;
+    }
 
     /**
      * Access the actual implementation of the Pulsar Client API.
-     *
      * @return the loaded implementation.
      */
     public static PulsarClientImplementationBinding getDefaultImplementation() {
-        String clientImpl = System.getProperty("pulsar.client.implementation.class", DEFAULT_IMPLEMENTATION);
-        return IMPLEMENTATIONS.computeIfAbsent(clientImpl, ci -> {
-            PulsarClientImplementationBinding impl;
-            try {
-                impl = (PulsarClientImplementationBinding) ReflectionUtils
-                        .newClassInstance(ci)
-                        .getConstructor().newInstance();
-            } catch (Throwable error) {
-                throw new RuntimeException("Cannot load Pulsar Client Implementation: " + error, error);
-            }
-            return impl;
-        });
+        return IMPLEMENTATION;
     }
 }

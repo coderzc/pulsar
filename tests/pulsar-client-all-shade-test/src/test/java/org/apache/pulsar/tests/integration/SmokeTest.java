@@ -18,8 +18,6 @@
  */
 package org.apache.pulsar.tests.integration;
 
-import com.iterable.shade.org.apache.pulsar.client.admin.PulsarAdmin;
-import com.iterable.shade.org.apache.pulsar.client.admin.PulsarAdminException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +30,8 @@ import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.tests.TestRetrySupport;
+import org.apache.pulsar.v3_0_7_5.client.admin.PulsarAdmin;
+import org.apache.pulsar.v3_0_7_5.client.admin.PulsarAdminException;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

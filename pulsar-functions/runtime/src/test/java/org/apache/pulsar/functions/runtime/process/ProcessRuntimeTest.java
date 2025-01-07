@@ -21,12 +21,11 @@ package org.apache.pulsar.functions.runtime.process;
 import static org.apache.pulsar.functions.runtime.RuntimeUtils.FUNCTIONS_INSTANCE_CLASSPATH;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.util.JsonFormat;
-
+import io.kubernetes.client.openapi.models.V1PodSpec;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import io.kubernetes.client.openapi.models.V1PodSpec;
 import org.apache.commons.lang3.JavaVersion;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
@@ -328,7 +325,7 @@ public class ProcessRuntimeTest {
                 + "-Dpulsar.function.log.dir=" + logDirectory + "/functions/" + FunctionCommon.getFullyQualifiedName(config.getFunctionDetails())
                 + " -Dpulsar.function.log.file=" + config.getFunctionDetails().getName() + "-" + config.getInstanceId()
                 + " -Dio.netty.tryReflectionSetAccessible=true"
-                + " -Dcom.iterable.shade.io.netty.tryReflectionSetAccessible=true"
+                + " -Dcom.apache.pulsar.v3_0_7_5.shade.io.netty.tryReflectionSetAccessible=true"
                 + " -Dio.grpc.netty.shaded.io.netty.tryReflectionSetAccessible=true"
                 + " --add-opens java.base/java.nio=ALL-UNNAMED"
                 + " --add-opens java.base/jdk.internal.misc=ALL-UNNAMED"

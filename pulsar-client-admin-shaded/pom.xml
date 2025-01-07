@@ -82,7 +82,7 @@
             <configuration>
               <target>
                 <!-- shade the AsyncHttpClient ahc-default.properties files -->
-                <replace token="org.asynchttpclient." value="com.iterable.shade.org.asynchttpclient." file="${project.build.directory}/classes/org/asynchttpclient/config/ahc-default.properties"/>
+                <replace token="org.asynchttpclient." value="com.apache.pulsar.v3_0_7_5.shade.org.asynchttpclient." file="${project.build.directory}/classes/org/asynchttpclient/config/ahc-default.properties"/>
               </target>
             </configuration>
           </execution>
@@ -171,133 +171,133 @@
               <relocations>
                 <relocation>
                   <pattern>org.asynchttpclient</pattern>
-                  <shadedPattern>com.iterable.shade.org.asynchttpclient</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.asynchttpclient</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.apache.commons</pattern>
-                  <shadedPattern>com.iterable.shade.org.apache.commons</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.apache.commons</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.google</pattern>
-                  <shadedPattern>com.iterable.shade.com.google</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.google</shadedPattern>
                   <excludes>
                     <exclude>com.google.protobuf.*</exclude>
                   </excludes>
                 </relocation>
                 <relocation>
                   <pattern>com.spotify.futures</pattern>
-                  <shadedPattern>com.iterable.shade.com.spotify.futures</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.spotify.futures</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.fasterxml.jackson</pattern>
-                  <shadedPattern>com.iterable.shade.com.fasterxml.jackson</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.fasterxml.jackson</shadedPattern>
                   <excludes>
                     <exclude>com.fasterxml.jackson.annotation.*</exclude>
                   </excludes>
                 </relocation>
                 <relocation>
                   <pattern>io.netty</pattern>
-                  <shadedPattern>com.iterable.shade.io.netty</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.io.netty</shadedPattern>
                 </relocation>
-                <relocation>
-                  <pattern>org.apache.pulsar.policies</pattern>
-                  <shadedPattern>com.iterable.shade.org.apache.pulsar.policies</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.apache.pulsar.checksum</pattern>
-                  <shadedPattern>com.iterable.shade.org.apache.pulsar.checksum</shadedPattern>
-                </relocation>
+<!--                <relocation>-->
+<!--                  <pattern>org.apache.pulsar.policies</pattern>-->
+<!--                  <shadedPattern>org.apache.pulsar.v3_0_7_5.policies</shadedPattern>-->
+<!--                </relocation>-->
+<!--                <relocation>-->
+<!--                  <pattern>org.apache.pulsar.checksum</pattern>-->
+<!--                  <shadedPattern>org.apache.pulsar.v3_0_7_5.checksum</shadedPattern>-->
+<!--                </relocation>-->
                 <relocation>
                   <pattern>com.yahoo</pattern>
-                  <shadedPattern>com.iterable.shade.com.yahoo</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.yahoo</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.typesafe</pattern>
-                  <shadedPattern>com.iterable.shade.com.typesafe</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.typesafe</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.glassfish</pattern>
-                  <shadedPattern>com.iterable.shade.org.glassfish</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.glassfish</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.ws</pattern>
-                  <shadedPattern>com.iterable.shade.javax.ws</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javax.ws</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.annotation</pattern>
-                  <shadedPattern>com.iterable.shade.javax.annotation</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javax.annotation</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.xml.bind</pattern>
-                  <shadedPattern>com.iterable.shade.javax.xml.bind</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javax.xml.bind</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>jersey</pattern>
-                  <shadedPattern>com.iterable.shade.jersey</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.jersey</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.jvnet</pattern>
-                  <shadedPattern>com.iterable.shade.org.jvnet</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.jvnet</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.aopalliance</pattern>
-                  <shadedPattern>com.iterable.shade.org.aopalliance</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.aopalliance</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javassist</pattern>
-                  <shadedPattern>com.iterable.shade.javassist</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javassist</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javax.inject</pattern>
-                  <shadedPattern>com.iterable.shade.javax.inject</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.javax.inject</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.reactivestreams</pattern>
-                  <shadedPattern>com.iterable.shade.org.reactivestreams</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.reactivestreams</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>io.grpc</pattern>
-                  <shadedPattern>com.iterable.shade.io.grpc</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.io.grpc</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>okio</pattern>
-                  <shadedPattern>com.iterable.shade.okio</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.okio</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.squareup</pattern>
-                  <shadedPattern>com.iterable.shade.com.squareup</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.squareup</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>io.opencensus</pattern>
-                  <shadedPattern>com.iterable.shade.io.opencensus</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.io.opencensus</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.eclipse.jetty</pattern>
-                  <shadedPattern>com.iterable.shade.org.eclipse.jetty</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.eclipse.jetty</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.objenesis</pattern>
-                  <shadedPattern>com.iterable.shade.org.objenesis</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.objenesis</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.yaml</pattern>
-                  <shadedPattern>com.iterable.shade.org.yaml</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.yaml</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>io.swagger</pattern>
-                  <shadedPattern>com.iterable.shade.io.swagger</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.io.swagger</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.apache.bookkeeper</pattern>
-                  <shadedPattern>com.iterable.shade.org.apache.bookkeeper</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.org.apache.bookkeeper</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.scurrilous</pattern>
-                  <shadedPattern>com.iterable.shade.com.scurrilous</shadedPattern>
+                  <shadedPattern>com.apache.pulsar.v3_0_7_5.shade.com.scurrilous</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.apache.pulsar</pattern>
-                  <shadedPattern>com.iterable.shade.org.apache.pulsar</shadedPattern>
+                  <shadedPattern>org.apache.pulsar.v3_0_7_5</shadedPattern>
                   <!-- exclude pulsar client API package-->
                   <excludes>
                     <exclude>org.apache.pulsar.common.api.AuthData</exclude>
@@ -312,7 +312,7 @@
                 <!-- Rename Netty native libraries to include the shaded prefix -->
                 <relocation>
                   <pattern>(META-INF/native/(lib)?)(netty.+\.(so|jnilib|dll))$</pattern>
-                  <shadedPattern>$1com_iterable_shade_$3</shadedPattern>
+                  <shadedPattern>$1com_apache_pulsar_v3_0_7_5_shade_$3</shadedPattern>
                   <rawString>true</rawString>
                 </relocation>
               </relocations>

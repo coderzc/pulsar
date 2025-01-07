@@ -18,6 +18,24 @@
  */
 package org.apache.pulsar.functions.runtime.kubernetes;
 
+import static org.apache.pulsar.functions.runtime.RuntimeUtils.FUNCTIONS_INSTANCE_CLASSPATH;
+import static org.apache.pulsar.functions.utils.FunctionCommon.roundDecimal;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertThrows;
+import static org.testng.Assert.assertTrue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -72,24 +90,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import static org.apache.pulsar.functions.runtime.RuntimeUtils.FUNCTIONS_INSTANCE_CLASSPATH;
-import static org.apache.pulsar.functions.utils.FunctionCommon.roundDecimal;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertThrows;
-import static org.testng.Assert.assertTrue;
 
 /**
  * Unit test of {@link ThreadRuntime}.
@@ -478,7 +478,7 @@ public class KubernetesRuntimeTest {
                 + "-Dpulsar.function.log.dir=" + logDirectory + "/" + FunctionCommon.getFullyQualifiedName(config.getFunctionDetails())
                 + " -Dpulsar.function.log.file=" + config.getFunctionDetails().getName() + "-$SHARD_ID"
                 + " -Dio.netty.tryReflectionSetAccessible=true"
-                + " -Dcom.iterable.shade.io.netty.tryReflectionSetAccessible=true"
+                + " -Dcom.apache.pulsar.v3_0_7_5.shade.io.netty.tryReflectionSetAccessible=true"
                 + " -Dio.grpc.netty.shaded.io.netty.tryReflectionSetAccessible=true"
                 + " --add-opens java.base/java.nio=ALL-UNNAMED"
                 + " --add-opens java.base/jdk.internal.misc=ALL-UNNAMED"

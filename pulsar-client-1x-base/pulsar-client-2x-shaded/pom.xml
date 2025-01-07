@@ -73,7 +73,7 @@
               <relocations>
                 <relocation>
                   <pattern>org.apache.pulsar.client.api</pattern>
-                  <shadedPattern>com.iterable.shade.client.api.v2</shadedPattern>
+                  <shadedPattern>org.apache.pulsar.client.api.v2</shadedPattern>
                   <includes>
                     <include>org.apache.pulsar.client.api.PulsarClient</include>
                     <include>org.apache.pulsar.client.api.Producer</include>

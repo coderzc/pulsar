@@ -27,9 +27,9 @@ import org.apache.pulsar.client.api.Reader;
 
 public class ReaderV1Impl implements Reader {
 
-    private final com.iterable.shade.client.api.v2.Reader<byte[]> reader;
+    private final org.apache.pulsar.client.api.v2.Reader<byte[]> reader;
 
-    public ReaderV1Impl(com.iterable.shade.client.api.v2.Reader<byte[]> reader) {
+    public ReaderV1Impl(org.apache.pulsar.client.api.v2.Reader<byte[]> reader) {
         this.reader = reader;
     }
 

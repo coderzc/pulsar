@@ -28,9 +28,9 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClientException;
 
 public class ConsumerV1Impl implements Consumer {
-    private final com.iterable.shade.client.api.v2.Consumer<byte[]> consumer;
+    private final org.apache.pulsar.client.api.v2.Consumer<byte[]> consumer;
 
-    public ConsumerV1Impl(com.iterable.shade.client.api.v2.Consumer<byte[]> consumer) {
+    public ConsumerV1Impl(org.apache.pulsar.client.api.v2.Consumer<byte[]> consumer) {
         this.consumer = consumer;
     }
 
