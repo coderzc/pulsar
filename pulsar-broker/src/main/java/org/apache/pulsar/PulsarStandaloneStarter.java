@@ -47,7 +47,7 @@ public class PulsarStandaloneStarter extends PulsarStandalone {
 
     public PulsarStandaloneStarter(String[] args) throws Exception {
 
-        // test 3.0 ci
+        log.info("test 3.0 ci");
 
         JCommander jcommander = new JCommander();
         try {
