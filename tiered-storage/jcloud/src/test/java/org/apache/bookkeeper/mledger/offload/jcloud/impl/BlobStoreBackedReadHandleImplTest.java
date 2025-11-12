@@ -30,14 +30,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.bookkeeper.client.LedgerMetadataBuilder;
 import org.apache.bookkeeper.client.api.DigestType;
 import org.apache.bookkeeper.client.api.LedgerEntries;
 import org.apache.bookkeeper.client.api.LedgerEntry;
 import org.apache.bookkeeper.client.api.LedgerMetadata;
+import org.apache.bookkeeper.common.util.OrderedScheduler;
 import org.apache.bookkeeper.mledger.offload.jcloud.BackedInputStream;
 import org.apache.bookkeeper.mledger.offload.jcloud.OffloadIndexBlock;
 import org.apache.bookkeeper.net.BookieId;
@@ -50,7 +49,7 @@ public class BlobStoreBackedReadHandleImplTest {
 
     private OffsetsCache offsetsCache = new OffsetsCache();
 
-    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+    private OrderedScheduler executor = OrderedScheduler.newSchedulerBuilder().numThreads(2).build();
 
     @AfterClass
     public void tearDown() throws Exception {
@@ -115,7 +114,7 @@ public class BlobStoreBackedReadHandleImplTest {
                     OffloadIndexEntryImpl.of(pair.getLeft(), 0, pair.getRight(), 0));
         }
         // Build obj.
-        return Pair.of(new BlobStoreBackedReadHandleImpl(ledgerId, mockIndex, inputStream, executor, offsetsCache),
+        return Pair.of(new BlobStoreBackedReadHandleImpl(ledgerId, mockIndex, List.of(inputStream), executor, offsetsCache),
                 data);
     }
 

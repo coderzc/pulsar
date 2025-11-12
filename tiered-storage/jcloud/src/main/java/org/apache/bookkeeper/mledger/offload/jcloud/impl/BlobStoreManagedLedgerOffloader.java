@@ -568,7 +568,8 @@ public class BlobStoreManagedLedgerOffloader implements LedgerOffloader {
         readExecutor.chooseThread(ledgerId).execute(() -> {
             try {
                 BlobStore readBlobstore = getBlobStore(config.getBlobStoreLocation());
-                promise.complete(BlobStoreBackedReadHandleImpl.open(readExecutor.chooseThread(ledgerId),
+                promise.complete(BlobStoreBackedReadHandleImpl.open(readExecutor,
+                        this.policies.getManagedLedgerOffloadReadThreads(),
                         readBlobstore,
                         readBucket, key, indexKey,
                         DataBlockUtils.VERSION_CHECK,

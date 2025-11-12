@@ -28,4 +28,5 @@ public abstract class BackedInputStream extends InputStream {
     public abstract void seek(long position);
     public abstract void seekForward(long position) throws IOException;
     public abstract long getCurrentPosition();
+    public abstract long getBufferLenFromOffset(long position);
 }

@@ -199,6 +199,15 @@ public class BlobStoreBackedInputStreamImpl extends BackedInputStream {
     }
 
     @Override
+    public long getBufferLenFromOffset(long position) {
+        if (position >= bufferOffsetStart && position <= bufferOffsetEnd) {
+            return bufferOffsetEnd - position + 1;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
     public void close() {
         buffer.release();
     }

@@ -27,6 +27,8 @@ public interface OffloadPolicies {
 
     Integer getManagedLedgerOffloadMaxThreads();
 
+    Integer getManagedLedgerOffloadReadThreads();
+
     Integer getManagedLedgerOffloadPrefetchRounds();
 
     Long getManagedLedgerOffloadThresholdInBytes();
