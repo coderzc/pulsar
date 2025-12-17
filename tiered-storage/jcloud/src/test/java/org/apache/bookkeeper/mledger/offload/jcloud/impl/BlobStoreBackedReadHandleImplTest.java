@@ -142,6 +142,11 @@ public class BlobStoreBackedReadHandleImplTest {
         }
 
         @Override
+        public long getBufferLenFromOffset(long position) {
+            return data.arrayOffset() - position + 1;
+        }
+
+        @Override
         public int read() throws IOException {
             if (data.readableBytes() == 0) {
                 throw new EOFException("The input-stream has no bytes to read");
